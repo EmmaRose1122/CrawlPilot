@@ -1,0 +1,132 @@
+.api-hero {
+    padding: 80px 0 40px;
+    background: linear-gradient(180deg, #F0F7FF 0%, #FFFFFF 100%);
+}
+
+.api-hero h1 {
+    margin-bottom: 16px;
+}
+
+.api-hero-sub {
+    font-size: 1.15rem;
+    color: var(--text-body);
+    margin-bottom: 8px;
+}
+
+.api-content {
+    padding: 40px 0 80px;
+}
+
+.api-section {
+    margin-bottom: 48px;
+}
+
+.api-section h2 {
+    margin-bottom: 16px;
+}
+
+.api-token-box {
+    border: 2px solid var(--primary-light);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-top: 20px;
+    background: var(--bg-light);
+}
+
+.api-token-label {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    display: block;
+    margin-bottom: 12px;
+}
+
+.api-token-value {
+    background: white;
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+}
+
+.api-endpoint {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    margin-bottom: 32px;
+    background: white;
+}
+
+.api-endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.api-method {
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.api-method.get {
+    background: #DBEAFE;
+    color: #1D4ED8;
+}
+
+.api-method.post {
+    background: #DCFCE7;
+    color: #16A34A;
+}
+
+.api-endpoint h3 {
+    font-size: 1.25rem;
+}
+
+.api-endpoint h4 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+
+code {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+}
+
+pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-delivered {
+    background: #DCFCE7;
+    color: #16A34A;
+}
+
+.status-in-progress {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.status-in-queue {
+    background: #F1F5F9;
+    color: #64748B;
+}
+
+.status-not-found {
+    background: #FEE2E2;
+    color: #DC2626;
+}

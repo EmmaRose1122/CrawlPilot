@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "insforge": {
+      "source": "insforge/agent-skills",
+      "sourceType": "github",
+      "computedHash": "24d91931ae80626e814b793af1eb1dfac95024ff9bc0ece0eeaaba8c943a526b"
+    },
+    "insforge-cli": {
+      "source": "insforge/agent-skills",
+      "sourceType": "github",
+      "computedHash": "e9467153a848c9d89804b28383c1c9b78231f3d6a14c2dcd97559a506480ada9"
+    }
+  }
+}
