@@ -26,7 +26,7 @@ const endpoints = [
         name: "Index Single URL",
         method: "GET",
         url: () => `${apiBase()}/index`,
-        desc: "Submit a single URL for instant discovery signaling.",
+        desc: "Submit a single URL to the configured engines and receive the real response status.",
         example: () => `curl -X GET "${apiBase()}/index?url=https%3A%2F%2Fexample.com&token=YOUR_TOKEN"`
     },
     {
@@ -40,7 +40,7 @@ const endpoints = [
         name: "Crawl Status",
         method: "GET",
         url: () => `${apiBase()}/index/status`,
-        desc: "Check if a URL has been crawled by our nodes.",
+        desc: "Check the stored submission status and per-engine results for a URL.",
         example: () => `curl -X GET "${apiBase()}/index/status?url=https%3A%2F%2Fexample.com&token=YOUR_TOKEN"`
     }
 ];

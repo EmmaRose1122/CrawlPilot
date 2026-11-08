@@ -1,11 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { prisma } from "./prisma";
-import { sendBotSignals } from "./botSignals";
 import { validatePublicHttpUrl } from "./urlSafety";
+import { enqueueSubmissionJob, processPendingJobs } from "./jobQueue";
+import { runSubmissionBatch } from "./engines/runSubmissionBatch";
 import {
     createIndexingResultsInInsforge,
     readUserByIdFromInsforge,
-    updateIndexingResultInInsforge,
     updateUserInInsforge,
 } from "./adminData";
 
@@ -68,7 +68,7 @@ export async function submitDiscovery({ userId, rawUrls, requestedBots }) {
 
     const user = await readUserByIdFromInsforge(
         userId,
-        "id,plan,allowedBots,googleIndexingConfig,balance"
+        "id,plan,allowedBots,googleIndexingConfig,indexNowKey,balance"
     );
 
     if (!user) {
@@ -132,7 +132,7 @@ export async function submitDiscovery({ userId, rawUrls, requestedBots }) {
             id: randomUUID(),
             url,
             bots: JSON.stringify(filteredBots),
-            status: "Delivered",
+            status: "queued",
             userId,
             createdAt: timestamp,
         }));
@@ -146,6 +146,15 @@ export async function submitDiscovery({ userId, rawUrls, requestedBots }) {
             if (charged.count === 0) {
                 throw new Error("INSUFFICIENT_CREDITS_RACE");
             }
+
+            // Durable job: the cron worker (or the immediate kick below) runs it,
+            // so a serverless timeout can no longer lose the submission.
+            await enqueueSubmissionJob(tx, {
+                userId,
+                records: records.map((record) => ({ id: record.id, url: record.url })),
+                engines: filteredBots,
+            });
+
             return records;
         });
     } catch (error) {
@@ -168,74 +177,18 @@ export async function submitDiscovery({ userId, rawUrls, requestedBots }) {
             userId,
         });
         await updateUserInInsforge(userId, { balance: balance - actualCost });
+
+        // No job table without Prisma — process inline as a degraded fallback.
+        runSubmissionBatch({
+            userId,
+            records: createdRecords.map((record) => ({ id: record.id, url: record.url })),
+            engines: filteredBots,
+        }).catch((inlineError) => console.error('[Indexing] Inline processing failed:', inlineError.message));
     }
 
-    // Start actual bot signaling in the background (non-blocking)
-    (async () => {
-        try {
-            const startTime = Date.now();
-            console.log(`[Indexing] Starting process for ${actualUrls.length} URLs, ${filteredBots.length} bots`);
-
-            let apiStatus = 'NONE';
-            let apiResults = [];
-
-            // 1. PRIORITY: If Google is selected and user has API config, use Google Indexing API FIRST
-            if (filteredBots.includes('google') && user.googleIndexingConfig) {
-                try {
-                    const { batchGoogleIndexing } = await import('./googleIndexing');
-                    const creds = JSON.parse(user.googleIndexingConfig);
-                    console.log(`[Diagnostic] Using Project: ${creds.project_id}`);
-                    console.log(`[Diagnostic] Service Account: ${creds.client_email}`);
-
-                    apiResults = await batchGoogleIndexing(actualUrls, user.googleIndexingConfig);
-                    apiStatus = 'API_SUCCESS';
-                    console.log(`[Google API Success] Count: ${apiResults.filter(r => r.success).length}/${actualUrls.length}`);
-                } catch (apiErr) {
-                    apiStatus = 'API_FAILED';
-                    console.error('[Google API Error] Details:', apiErr.message);
-                }
-            }
-
-            // 2. Perform traditional bot signaling
-            const { results: signalResults, stats, summary } = await sendBotSignals(filteredBots, actualUrls, {
-                concurrency: 5,
-                maxRetries: 2,
-                progressCallback: (progress) => {
-                    if (progress.type === 'progress') {
-                        console.log(`[Indexing] Progress: ${progress.completed}/${progress.total} signals completed`);
-                    }
-                },
-            });
-
-            const endTime = Date.now();
-            console.log(`[Indexing] Completed in ${endTime - startTime}ms: ${summary}`);
-
-            // 3. Update database with results
-            try {
-                for (const record of createdRecords) {
-                    const urlResults = signalResults.filter(r => r.url === record.url);
-                    const successCount = urlResults.filter(r => r.success).length;
-                    const totalCount = urlResults.length;
-
-                    await updateIndexingResultInInsforge(record.id, {
-                        signalingResults: JSON.stringify({
-                            successCount,
-                            totalCount,
-                            successRate: totalCount > 0 ? (successCount / totalCount) * 100 : 0,
-                            lastUpdated: new Date(),
-                            apiUsed: !!user.googleIndexingConfig && filteredBots.includes('google'),
-                            apiStatus: apiStatus
-                        }),
-                    });
-                }
-                console.log(`[Indexing] Updated ${createdRecords.length} records in DB`);
-            } catch (dbError) {
-                console.error('[Indexing] DB Update Error:', dbError);
-            }
-        } catch (err) {
-            console.error('[Indexing] Fatal Background Error:', err);
-        }
-    })();
+    // Kick the durable queue immediately for low latency; the cron worker is
+    // the reliability backstop if the function is frozen before it finishes.
+    processPendingJobs({ limit: 2 }).catch((err) => console.error('[Indexing] Queue kick failed:', err.message));
 
     return {
         status: 200,
@@ -244,7 +197,7 @@ export async function submitDiscovery({ userId, rawUrls, requestedBots }) {
             count: actualUrls.length,
             botsUsed: filteredBots,
             skippedUrls,
-            message: `Discovery submitted. ${actualUrls.length} URLs will be processed with ${filteredBots.length} bots.`,
+            message: `Queued ${actualUrls.length} URL(s) across ${filteredBots.length} engine(s). Processing in the background.`,
         },
     };
 }

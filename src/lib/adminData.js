@@ -166,7 +166,7 @@ export async function createIndexingResultsInInsforge({ urls, bots, userId }) {
         id: randomUUID(),
         url,
         bots: JSON.stringify(bots),
-        status: "Delivered",
+        status: "queued",
         userId,
         createdAt: timestamp,
         updatedAt: timestamp,

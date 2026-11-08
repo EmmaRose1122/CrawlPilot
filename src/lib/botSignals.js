@@ -1,28 +1,15 @@
 /**
- * Send actual HTTP signals to search engine bots.
- * This function simulates a bot request by making a GET request with the appropriate user-agent.
- * It also pings official ping endpoints where available.
+ * Performs the engine request for a URL.
+ *
+ * Only engines that expose real submission interfaces are listed here.
+ * Google accepts the Indexing API (handled in googleIndexing.js); Bing accepts
+ * IndexNow (Phase 1). This module performs the plain HTTP check and records the
+ * real response — it does not simulate a crawler visit.
  */
 
-// Mapping of bot IDs to user-agent strings
 export const botUserAgents = {
     google: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
     bing: 'Mozilla/5.0 (compatible; Bingbot/2.0; +http://www.bing.com/bingbot.htm)',
-    openai: 'Mozilla/5.0 (compatible; ChatGPT-User; +https://openai.com)',
-    baidu: 'Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)',
-    yandex: 'Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)',
-    duck: 'Mozilla/5.0 (compatible; DuckDuckBot/1.0; +http://duckduckgo.com/duckduckbot.html)',
-    apple: 'Mozilla/5.0 (compatible; Applebot/0.1; +http://www.apple.com/go/applebot)',
-    pinterest: 'Mozilla/5.0 (compatible; Pinterestbot/1.0; +http://www.pinterest.com/bot.html)',
-    common: 'Mozilla/5.0 (compatible; CommonCrawl/1.0; +http://commoncrawl.org/bot.html)',
-    anthropic: 'Mozilla/5.0 (compatible; ClaudeBot/1.0; +https://www.anthropic.com)'
-};
-
-// Ping endpoints (if any)
-const pingEndpoints = {
-    google: 'https://www.google.com/ping?sitemap=',
-    bing: 'https://www.bing.com/ping?sitemap=',
-    // Others may not have public ping endpoints
 };
 
 /**
@@ -53,12 +40,6 @@ export async function sendBotSignal(botId, url, options = {}) {
             });
             clearTimeout(timeoutId);
             const responseTime = Date.now() - startTime;
-
-            // 2. If there's a ping endpoint for this bot, also ping (non-blocking)
-            if (pingEndpoints[botId]) {
-                const pingUrl = pingEndpoints[botId] + encodeURIComponent(url);
-                fetch(pingUrl, { method: 'GET' }).catch(() => {}); // fire and forget
-            }
 
             return {
                 success: response.ok,

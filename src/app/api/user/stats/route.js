@@ -55,7 +55,12 @@ export async function GET(request) {
         );
 
         const totalUrlsResult = allResults.length;
-        const deliveredCount = allResults.filter(result => result.status === "Delivered").length;
+        // Real outcome counts — statuses are set from actual engine responses.
+        const submittedCount = allResults.filter(result => result.status === "submitted").length;
+        const partialCount = allResults.filter(result => result.status === "partial").length;
+        const failedCount = allResults.filter(result => result.status === "failed").length;
+        const pendingCount = allResults.filter(result => result.status === "queued" || result.status === "processing").length;
+        const acceptedCount = submittedCount + partialCount;
 
         let totalBotSignals = 0;
         let totalPrimarySignals = 0;
@@ -154,11 +159,26 @@ export async function GET(request) {
         const recentSignalCount = countSignals(recentResults);
         const previousSignalCount = countSignals(previousResults);
 
+        // Durable queue depth (jobs not yet completed).
+        let queuedJobs = 0;
+        try {
+            queuedJobs = await prisma.submissionJob.count({
+                where: { userId: session.user.id, status: { in: ['pending', 'processing'] } },
+            });
+        } catch {
+            queuedJobs = 0;
+        }
+
         return NextResponse.json({
             balance: user?.balance || 0,
             totalUrls: totalUrlsResult,
-            delivered: deliveredCount,
-            successRate: totalUrlsResult > 0 ? Math.round((deliveredCount / totalUrlsResult) * 100) : 0,
+            accepted: acceptedCount,
+            submitted: submittedCount,
+            partial: partialCount,
+            failed: failedCount,
+            pending: pendingCount,
+            queuedJobs,
+            successRate: totalUrlsResult > 0 ? Math.round((submittedCount / totalUrlsResult) * 100) : 0,
             totalBotSignals,
             totalPrimarySignals,
             totalAISignals,

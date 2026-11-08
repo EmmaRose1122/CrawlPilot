@@ -35,10 +35,10 @@ const itemVariants = {
 };
 
 const faqs = [
-  { question: "How does Crawl Pilot achieve fast indexing?", answer: "We leverage a proprietary network of high-authority discovery nodes that signal search engine crawlers (GoogleBot, BingBot, etc.) to visit your URLs immediately. This bypasses the traditional 'waiting queue' and places your content on the priority crawl list." },
-  { question: "Is this service safe for my website?", answer: "Absolutely. Crawl Pilot uses legitimate API protocols and standard crawler behavior. We don't use 'black hat' techniques or anything that violates search engine guidelines. We simply facilitate discovery." },
-  { question: "Can I use Crawl Pilot for mass link indexing?", answer: "Yes, our platform is designed for scale. Whether you have 100 or 1,000,000 URLs, our infrastructure can handle mass submissions through our dashboard or REST API." },
-  { question: "What search engines do you support?", answer: "We primarily target Google and Bing, but our signaling also impacts other engines like DuckDuckGo, Yahoo, and modern AI engines like OpenAI's ChatGPT browsing bot." }
+  { question: "How does Crawl Pilot submit my URLs?", answer: "We use the submission interfaces engines actually provide: URL submission APIs where available, sitemap submission, and HTTP verification of each URL. Every engine response is stored per URL, so you see exactly what was accepted and what was rejected — no fabricated delivery reports." },
+  { question: "Is this service safe for my website?", answer: "We only use documented, official submission interfaces and standard HTTP requests. No cloaking, no fake traffic, and nothing that violates engine guidelines. Submission does not guarantee indexing — the search engine still decides." },
+  { question: "Can I use Crawl Pilot for bulk submissions?", answer: "Yes. Submit URLs in bulk through the dashboard or the REST API (up to 1,000 URLs per API request). Each URL is tracked separately with its own acceptance status." },
+  { question: "What engines do you support?", answer: "We support the engines that expose submission interfaces: Google (Indexing API for eligible content types, plus sitemap submission) and Bing (IndexNow — which also feeds DuckDuckGo and other IndexNow participants). Other engines have no public submission API, so we do not pretend to submit to them." }
 ];
 
 export default function HomePage() {
@@ -55,13 +55,13 @@ export default function HomePage() {
           >
             <motion.div variants={itemVariants} className="hero-badge">
               <span className="badge-pulsar" />
-              Next-Gen Indexing Protocol
+              URL Submission &amp; Status Tracking
             </motion.div>
             <motion.h1 variants={itemVariants}>
-              Index Your Content <span>Instantly</span> with Crawl Pilot
+              Submit Your Content <span>Smarter</span> with Crawl Pilot
             </motion.h1>
             <motion.p variants={itemVariants}>
-              Don't wait weeks for search engines to find your pages. Our lightning-fast indexing technology delivers GoogleBot and BingBot to your doorstep in real-time.
+              Submit URLs through the interfaces engines actually support — IndexNow, the Google Indexing API, and sitemap submission — then track every engine response per URL in real time.
             </motion.p>
             <motion.div variants={itemVariants} className="hero-btns">
               <Link href="/authorize" className="btn btn-primary btn-lg">
@@ -71,16 +71,16 @@ export default function HomePage() {
             </motion.div>
             <motion.div variants={itemVariants} className="hero-metrics">
               <div className="metric">
-                <strong>1M+</strong>
-                <span>URLs Indexed</span>
+                <strong>Per-URL</strong>
+                <span>Status Tracking</span>
               </div>
               <div className="metric">
-                <strong>99.9%</strong>
-                <span>Bot Delivery</span>
+                <strong>Real</strong>
+                <span>Engine Responses</span>
               </div>
               <div className="metric">
-                <strong>24/7</strong>
-                <span>Monitoring</span>
+                <strong>API v1</strong>
+                <span>Developer Access</span>
               </div>
             </motion.div>
           </motion.div>
@@ -98,10 +98,10 @@ export default function HomePage() {
                 <div className="dot" />
               </div>
               <div className="mockup-content">
-                <div className="console-line">Processing URL discovery...</div>
-                <div className="console-line active">✓ Signaling GoogleBot (66.249.79.12x)</div>
-                <div className="console-line">✓ Content ingested by ChatGPT Bot</div>
-                <div className="console-line success">✓ 100% Indexing Efficiency Achieved</div>
+                <div className="console-line">Queued 12 URLs across 2 engines...</div>
+                <div className="console-line active">✓ BING: HTTP 200 accepted</div>
+                <div className="console-line">✓ GOOGLE: HTTP 200 accepted</div>
+                <div className="console-line success">✓ Status stored per URL</div>
               </div>
             </div>
             <div className="graphic-decoration deco-1"><Zap fill="var(--primary)" size={48} /></div>
@@ -115,17 +115,17 @@ export default function HomePage() {
         <div className="container">
           <div className="section-header">
             <h2>Why Professional SEOs Choose <span>Crawl Pilot</span></h2>
-            <p>Our infrastructure is built for speed, transparency, and results.</p>
+            <p>Honest submission tooling: real engine responses, per-URL status, and no fabricated metrics.</p>
           </div>
 
           <div className="features-grid">
             {[
-              { icon: <Clock size={32} />, title: "Instant Discovery", desc: "Why wait weeks? We signal search engine crawlers to visit your new URLs within minutes of submission." },
-              { icon: <Database size={32} />, title: "Bulk Management", desc: "Easily submit and track millions of URLs simultaneously using our intuitive dashboard or powerful API." },
-              { icon: <Globe size={32} />, title: "Multi-Engine Support", desc: "One platform for all. We optimize discovery for Google, Bing, and AI-powered search engines." },
-              { icon: <BarChart3 size={32} />, title: "Live Bot Tracking", desc: "See exactly when search bots visit your site with our real-time crawl logs and visit analytics." },
-              { icon: <Cpu size={32} />, title: "Smart Automation", desc: "Integrate our API with your CMS to automatically trigger indexing every time you publish." },
-              { icon: <ShieldCheck size={32} />, title: "Risk-Free Results", desc: "We use standard white-hat signaling protocols that are 100% safe for your domain's health." }
+              { icon: <Clock size={32} />, title: "API-First Submission", desc: "Submit through documented interfaces (IndexNow, Google Indexing API, sitemaps) instead of waiting for a crawl cycle." },
+              { icon: <Database size={32} />, title: "Bulk Management", desc: "Submit and track thousands of URLs from the dashboard or the REST API, with a separate record for each URL." },
+              { icon: <Globe size={32} />, title: "Supported Engines Only", desc: "Google and Bing — the engines that expose submission interfaces. We don't claim signals we cannot send." },
+              { icon: <BarChart3 size={32} />, title: "Real Response Tracking", desc: "Every engine response (HTTP status, timing, error) is stored and shown per URL — no simulated logs." },
+              { icon: <Cpu size={32} />, title: "Smart Automation", desc: "Connect the API to your CMS to queue submissions automatically whenever you publish." },
+              { icon: <ShieldCheck size={32} />, title: "Guideline-Safe", desc: "Only documented, white-hat submission interfaces. Submission is a request — the engine still decides what to index." }
             ].map((f, i) => (
               <motion.div
                 key={i}
@@ -149,10 +149,10 @@ export default function HomePage() {
               <h2>How Crawl Pilot <span>Accelerates</span> Your Growth</h2>
               <div className="workflow-steps">
                 {[
-                  { title: "Submit Your URLs", desc: "Upload individual links or a complete sitemap directly to our cloud engine." },
-                  { title: "Discovery Signaling", desc: "Our network creates immediate pathways for search engine bots to find your content." },
-                  { title: "Bot Delivery", desc: "Watch in real-time as GoogleBot and BingBot arrive to crawl your pages." },
-                  { title: "Search Indexing", desc: "Search engines process your content and integrate it into their primary index." }
+                  { title: "Submit Your URLs", desc: "Upload individual links or parse a complete sitemap — each URL gets its own record." },
+                  { title: "Engine Submission", desc: "URLs are sent through the official submission interfaces (IndexNow, Google Indexing API, sitemaps)." },
+                  { title: "Response Capture", desc: "Every engine response — HTTP status, timing and errors — is stored per URL." },
+                  { title: "Status Tracking", desc: "Monitor accepted, partial and failed submissions from the dashboard or the API." }
                 ].map((s, i) => (
                   <div key={i} className="workflow-step">
                     <div className="step-num">{i + 1}</div>
@@ -182,7 +182,7 @@ export default function HomePage() {
         <div className="container">
           <div className="section-header">
             <h2>Frequently Asked Questions</h2>
-            <p>Everything you need to know about our indexing technology.</p>
+            <p>Everything you need to know about our submission and tracking technology.</p>
           </div>
           <FAQAccordion items={faqs} />
         </div>
@@ -202,7 +202,7 @@ export default function HomePage() {
         
         <section id="our-story">
             <h2>Our Story</h2>
-            <p>Crawl Pilot was founded with a singular mission: to make web discovery fast and equitable. By bypassing antiquated queues, we created a revolutionary signaling pipeline to help content creators everywhere receive instantaneous recognition from major search bots.</p>
+            <p>Crawl Pilot was founded with a singular mission: to make web discovery fast and transparent. We built a submission platform around the interfaces search engines actually provide — IndexNow, the Google Indexing API and sitemap submission — with real per-engine response tracking.</p>
         </section>
 
         <section id="who-we-are">

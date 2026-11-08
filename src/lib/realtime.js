@@ -141,7 +141,7 @@ export function subscribeToDailyStats(userId, callback) {
                     type: 'daily_stats_update',
                     stats: stats.dailyStats || [],
                     totalUrls: stats.totalUrls || 0,
-                    deliveredUrls: stats.deliveredUrls || 0,
+                    acceptedUrls: stats.accepted || 0,
                     timestamp: new Date().toISOString()
                 });
             }

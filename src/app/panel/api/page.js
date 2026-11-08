@@ -11,7 +11,10 @@ import {
     ExternalLink,
     Loader2,
     Eye,
-    EyeOff
+    EyeOff,
+    Globe,
+    ShieldCheck,
+    XCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -24,6 +27,14 @@ export default function ApiPanelPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isRotating, setIsRotating] = useState(false);
     const [error, setError] = useState('');
+
+    const [indexNow, setIndexNow] = useState(null);
+    const [keyRevealed, setKeyRevealed] = useState(false);
+    const [keyCopied, setKeyCopied] = useState(false);
+    const [isRotatingKey, setIsRotatingKey] = useState(false);
+    const [verifyDomain, setVerifyDomain] = useState('');
+    const [verifyResult, setVerifyResult] = useState(null);
+    const [isVerifying, setIsVerifying] = useState(false);
 
     const fetchToken = async () => {
         setIsLoading(true);
@@ -48,14 +59,31 @@ export default function ApiPanelPage() {
         }
     };
 
+    const fetchIndexNow = async () => {
+        try {
+            const res = await fetch('/api/user/indexnow');
+            const data = await res.json();
+            if (res.ok) setIndexNow(data);
+        } catch {
+            // Non-blocking: the IndexNow card simply stays empty.
+        }
+    };
+
     useEffect(() => {
         fetchToken();
+        fetchIndexNow();
     }, []);
 
     const copyToken = () => {
         navigator.clipboard.writeText(token);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const copyIndexNowKey = () => {
+        navigator.clipboard.writeText(indexNow?.key || '');
+        setKeyCopied(true);
+        setTimeout(() => setKeyCopied(false), 2000);
     };
 
     const rotateToken = async () => {
@@ -80,13 +108,48 @@ export default function ApiPanelPage() {
         }
     };
 
+    const rotateIndexNowKey = async () => {
+        if (!confirm('Rotate IndexNow key? You must re-host the new key file on your domains before submitting.')) return;
+        setIsRotatingKey(true);
+        setVerifyResult(null);
+        try {
+            const res = await fetch('/api/user/indexnow', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                setIndexNow((prev) => ({ ...(prev || {}), ...data }));
+                setKeyRevealed(true);
+            }
+        } finally {
+            setIsRotatingKey(false);
+        }
+    };
+
+    const verifyDomainKey = async () => {
+        if (!verifyDomain.trim()) return;
+        setIsVerifying(true);
+        setVerifyResult(null);
+        try {
+            const res = await fetch('/api/user/indexnow/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain: verifyDomain }),
+            });
+            const data = await res.json();
+            setVerifyResult(res.ok ? data : { verified: false, reason: data.error || 'Verification failed' });
+        } catch {
+            setVerifyResult({ verified: false, reason: 'Verification failed' });
+        } finally {
+            setIsVerifying(false);
+        }
+    };
+
     const apiBase = typeof window !== 'undefined' ? `${window.location.origin}/api/v1` : '/api/v1';
 
     const endpoints = [
         { method: 'GET', endpoint: '/balance', desc: 'Retrieve your current URL quota and submission limits.' },
-        { method: 'GET', endpoint: '/index?url=...&bots=google', desc: 'Trigger an immediate crawler discovery signal for a single URL.' },
-        { method: 'POST', endpoint: '/index/bulk', desc: 'Perform high-volume multi-engine discovery via JSON batch (up to 1,000 URLs).' },
-        { method: 'GET', endpoint: '/index/status?url=...', desc: 'Query the last seen timestamp and status for a specific URL.' },
+        { method: 'GET', endpoint: '/index?url=...&bots=google,bing', desc: 'Submit a single URL to the configured engines and get the real response status.' },
+        { method: 'POST', endpoint: '/index/bulk', desc: 'Submit up to 1,000 URLs in one request and track each URL separately.' },
+        { method: 'GET', endpoint: '/index/status?url=...', desc: 'Query the stored submission status and per-engine results for a URL.' },
     ];
 
     return (
@@ -95,7 +158,7 @@ export default function ApiPanelPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                         <h1 className="panel-page-title">Developer Access</h1>
-                        <p className="panel-page-subtitle">Integrate Crawl Pilot discovery engine into your stack.</p>
+                        <p className="panel-page-subtitle">Integrate Crawl Pilot submission engine into your stack.</p>
                     </div>
                     <Link href="/api-docs" target="_blank" className="btn btn-outline btn-sm">
                         Full Docs <ExternalLink size={14} style={{ marginLeft: '4px' }} />
@@ -157,6 +220,88 @@ export default function ApiPanelPage() {
                         <strong>Security Alert:</strong> This token grants access to your URL balance. Keep it secure. It is stored hashed — if you lose it, rotate it.
                     </p>
                 </div>
+            </div>
+
+            {/* ===== IndexNow (Bing / Yandex / Seznam / Naver) ===== */}
+            <div className="panel-card mb-4">
+                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(0,164,239,0.1)', color: '#00A4EF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Globe size={24} />
+                        </div>
+                        <div>
+                            <h3 style={{ margin: 0 }}>IndexNow (Bing, Yandex, Seznam, Naver)</h3>
+                            <p className="text-sm text-light" style={{ margin: '4px 0 0' }}>Real instant-submission protocol. Your key file must be hosted on your own domain.</p>
+                        </div>
+                    </div>
+                    <button className="btn btn-outline btn-sm" onClick={rotateIndexNowKey} disabled={isRotatingKey || !indexNow}>
+                        {isRotatingKey ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                        <span style={{ marginLeft: '6px' }}>Rotate key</span>
+                    </button>
+                </div>
+
+                <div style={{ background: 'var(--bg-light)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-light)', marginBottom: '8px' }}>Your IndexNow key</div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <code style={{ flex: 1, minWidth: '240px', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.95rem', wordBreak: 'break-all' }}>
+                            {!indexNow ? <Loader2 size={16} className="animate-spin" /> : keyRevealed ? indexNow.key : '••••••••••••••••••••••••••••••••'}
+                        </code>
+                        <button className="btn btn-outline btn-sm" onClick={() => setKeyRevealed(!keyRevealed)} disabled={!indexNow}>
+                            {keyRevealed ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                        <button className="btn btn-primary btn-sm" onClick={copyIndexNowKey} disabled={!indexNow}>
+                            {keyCopied ? <Check size={16} /> : <Copy size={16} />}
+                            <span style={{ marginLeft: '6px' }}>{keyCopied ? 'Copied' : 'Copy key'}</span>
+                        </button>
+                    </div>
+
+                    <ol style={{ margin: '16px 0 0', paddingLeft: '20px', fontSize: '0.85rem', color: 'var(--text-body)', lineHeight: 1.7 }}>
+                        <li>Create a file named <code>{indexNow?.keyFileName || '<key>.txt'}</code> containing exactly your key.</li>
+                        <li>Host it at <code>{indexNow?.keyLocationTemplate || 'https://<your-domain>/<key>.txt'}</code> (site root).</li>
+                        <li>Verify the domain below, then select <strong>Bing</strong> when submitting URLs.</li>
+                    </ol>
+                </div>
+
+                <div style={{ marginTop: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <input
+                        type="text"
+                        className="input"
+                        placeholder="your-domain.com"
+                        value={verifyDomain}
+                        onChange={(e) => setVerifyDomain(e.target.value)}
+                        style={{ flex: 1, minWidth: '220px', border: '1px solid var(--border-color)', padding: '10px 14px', borderRadius: '10px' }}
+                    />
+                    <button className="btn btn-primary" onClick={verifyDomainKey} disabled={isVerifying || !verifyDomain.trim() || !indexNow}>
+                        {isVerifying ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
+                        <span style={{ marginLeft: '6px' }}>{isVerifying ? 'Checking...' : 'Verify key file'}</span>
+                    </button>
+                </div>
+
+                {indexNow?.domains?.length > 0 && (
+                    <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 700 }}>Your domains:</span>
+                        {indexNow.domains.map((domain) => (
+                            <button
+                                key={domain}
+                                onClick={() => setVerifyDomain(domain)}
+                                style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '999px', border: '1px solid var(--border-color)', background: 'white', cursor: 'pointer', fontWeight: 600 }}
+                            >
+                                {domain}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {verifyResult && (
+                    <div style={{ marginTop: '14px', padding: '12px 16px', borderRadius: '10px', display: 'flex', gap: '10px', alignItems: 'flex-start', background: verifyResult.verified ? '#dcfce7' : '#fef2f2', color: verifyResult.verified ? '#166534' : '#991b1b', fontSize: '0.85rem', fontWeight: 600 }}>
+                        {verifyResult.verified ? <ShieldCheck size={18} style={{ flexShrink: 0 }} /> : <XCircle size={18} style={{ flexShrink: 0 }} />}
+                        <span>
+                            {verifyResult.verified
+                                ? `Verified — key file found at ${verifyResult.keyLocation}. You can submit with Bing now.`
+                                : `${verifyResult.reason || 'Verification failed'}${verifyResult.keyLocation ? ` (checked ${verifyResult.keyLocation})` : ''}`}
+                        </span>
+                    </div>
+                )}
             </div>
 
             <h2 style={{ fontSize: '1.5rem', marginBottom: '24px' }}>Fast Integration</h2>

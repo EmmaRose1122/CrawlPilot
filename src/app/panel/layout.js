@@ -20,13 +20,15 @@ import {
     Menu,
     X,
     Zap,
-    Bell
+    Bell,
+    FileSearch
 } from 'lucide-react';
 import './panel.css';
 
 const navItems = [
     { href: '/panel/overview', label: 'Overview', icon: <LayoutDashboard size={20} /> },
     { href: '/panel/indexing', label: 'Indexing', icon: <Search size={20} /> },
+    { href: '/panel/audit', label: 'Site Audit', icon: <FileSearch size={20} /> },
     { href: '/panel/api', label: 'API Integration', icon: <Code size={20} /> },
     { href: '/panel/billing', label: 'Balance Top-Up', icon: <CreditCard size={20} /> },
     { href: '/panel/payments', label: 'Payment history', icon: <History size={20} /> },
@@ -98,7 +100,7 @@ export default function PanelLayout({ children }) {
 
                 <nav className="panel-nav">
                     <div className="nav-group-title">Discovery Engine</div>
-                    {navItems.slice(0, 3).map((item) => (
+                    {navItems.slice(0, 4).map((item) => (
                         <Link
                             key={item.href}
                             href={item.href}
@@ -111,7 +113,7 @@ export default function PanelLayout({ children }) {
                     ))}
 
                     <div className="nav-group-title">Organization</div>
-                    {navItems.slice(3, 10).map((item) => (
+                    {navItems.slice(4, 11).map((item) => (
                         <Link
                             key={item.href}
                             href={item.href}

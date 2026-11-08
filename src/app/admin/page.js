@@ -195,10 +195,10 @@ export default function AdminOverview() {
                 </div>
 
                 <div className="admin-card">
-                    <h3 style={{ marginBottom: '24px', fontSize: '1.1rem' }}>Bot Traffic Share</h3>
+                    <h3 style={{ marginBottom: '24px', fontSize: '1.1rem' }}>Engine Acceptance</h3>
                     <div style={{ padding: '20px', textAlign: 'center' }}>
                         <Shield size={32} color="var(--border-color)" className="mb-2" style={{ margin: '0 auto' }} />
-                        <p className="text-xs text-muted">No crawling signals detected yet.</p>
+                        <p className="text-xs text-muted">No submissions recorded yet.</p>
                         <div style={{ width: '100%', height: '8px', background: 'var(--bg-light)', borderRadius: '4px', marginTop: '16px' }}></div>
                     </div>
                 </div>

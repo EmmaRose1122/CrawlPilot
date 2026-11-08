@@ -12,11 +12,11 @@ const notoSans = Noto_Sans({
 
 export const metadata = {
   title: {
-    default: "Crawl Pilot - #1 Backlink Indexer & Fast URL Indexing Service",
+    default: "Crawl Pilot - URL Submission & Indexing Status Tracker",
     template: "%s | Crawl Pilot",
   },
-  description: "Crawl Pilot accelerates Google, Bing, and ChatGPT indexing with live crawl monitoring and detailed bot logs. Get your content discovered instantly.",
-  keywords: ["backlink indexer", "fast indexing", "Google indexing", "Bing indexing", "SEO", "URL indexer", "crawl monitoring", "backlink indexing service", "instant indexing", "SEO automation", "AEO", "GEO"],
+  description: "Submit URLs through IndexNow, the Google Indexing API and sitemaps, then track per-engine acceptance status with real HTTP responses. Transparent submission tooling with no simulated logs.",
+  keywords: ["url submission", "indexnow", "google indexing api", "sitemap submission", "indexing status", "SEO", "crawl monitoring", "backlink indexing service", "instant indexing", "SEO automation", "AEO", "GEO"],
   authors: [{ name: "Crawl Pilot", url: "https://crawlpilot.io" }],
   metadataBase: new URL('https://crawl-pilot.vercel.app'),
   alternates: {
@@ -27,21 +27,21 @@ export const metadata = {
     locale: "en_US",
     url: "https://crawl-pilot.vercel.app",
     siteName: "Crawl Pilot",
-    title: "Crawl Pilot - #1 Backlink Indexer & Fast URL Indexing Service",
-    description: "Crawl Pilot accelerates Google, Bing, and ChatGPT indexing with real-time crawl monitoring and detailed bot logs.",
+    title: "Crawl Pilot - URL Submission & Indexing Status Tracker",
+    description: "Submit URLs through official engine interfaces and track real acceptance status per URL.",
     images: [
       {
         url: "/og-image.png", // We should create or provide this
         width: 1200,
         height: 630,
-        alt: "Crawl Pilot - Instant Search Engine Indexing",
+        alt: "Crawl Pilot - URL Submission & Status Tracking",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crawl Pilot - #1 Backlink Indexer",
-    description: "Crawl Pilot accelerates your indexing with real-time crawl monitoring.",
+    title: "Crawl Pilot - URL Submission & Status Tracking",
+    description: "Submit URLs through official engine interfaces and track real acceptance status per URL.",
     images: ["/og-image.png"],
   },
   robots: {

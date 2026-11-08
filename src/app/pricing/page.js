@@ -32,7 +32,7 @@ const plans = [
         sublabel: "Special 15% Discount",
         price: "$15",
         oldPrice: "$20",
-        features: ["10,000 URLs total", "One-Time Purchase", "Multi-Engine Support", "Crawl log tracking", "Priority Monitoring", "API access", "Priority Support"],
+        features: ["10,000 URLs total", "One-Time Purchase", "Google + Bing Submission", "Submission status tracking", "Priority Monitoring", "API access", "Priority Support"],
         btn: "Scale Now",
         href: "/authorize",
         featured: true,
@@ -57,7 +57,7 @@ const plans = [
         sublabel: "Volume Leader (50% off)",
         price: "$35",
         oldPrice: "$60",
-        features: ["1,000,000 URLs total", "Everything in Agency", "Custom Bot Discovery", "API Rate Limit Plus", "Direct Account Manager"],
+        features: ["1,000,000 URLs total", "Everything in Agency", "Custom Submission Limits", "API Rate Limit Plus", "Direct Account Manager"],
         btn: "Go Enterprise",
         href: "/authorize",
         featured: false,
@@ -127,8 +127,8 @@ export default function PricingPage() {
 
                     <div className="features-sub-grid">
                         {[
-                            { icon: <Search size={24} />, title: "Bot Discovery", desc: "Real-time signaling to GoogleBot and BingBot for instant crawl entry." },
-                            { icon: <BarChart3 size={24} />, title: "Live Analytics", desc: "Track every bot visit with detailed IP and timestamp logs." },
+                            { icon: <Search size={24} />, title: "API Submission", desc: "Send URLs through IndexNow and the Google Indexing API, with the real engine response stored per URL." },
+                            { icon: <BarChart3 size={24} />, title: "Submission Analytics", desc: "Track per-URL acceptance status, HTTP responses and timestamps from one dashboard." },
                             { icon: <Shield size={24} />, title: "Safety First", desc: "100% white-hat methods compliant with search engine guidelines." },
                             { icon: <History size={24} />, title: "Submission History", desc: "Keep track of every URL submitted and its indexing progress over time." }
                         ].map((f, i) => (

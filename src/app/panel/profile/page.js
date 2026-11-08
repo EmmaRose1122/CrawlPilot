@@ -13,7 +13,8 @@ import {
     Loader2,
     Code,
     Copy,
-    CheckCircle2
+    CheckCircle2,
+    ShieldCheck
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -29,6 +30,9 @@ export default function ProfilePage() {
     const [passwordMsg, setPasswordMsg] = useState({ type: '', text: '' });
     const [isSavingIdentity, setIsSavingIdentity] = useState(false);
     const [isSavingPassword, setIsSavingPassword] = useState(false);
+    const [gscProperties, setGscProperties] = useState(null);
+    const [gscError, setGscError] = useState('');
+    const [isCheckingGsc, setIsCheckingGsc] = useState(false);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -113,6 +117,25 @@ export default function ProfilePage() {
             alert('Failed to save configuration.');
         } finally {
             setSavingConfig(false);
+        }
+    };
+
+    const checkSearchConsole = async () => {
+        setIsCheckingGsc(true);
+        setGscError('');
+        setGscProperties(null);
+        try {
+            const res = await fetch('/api/indexing/google/properties');
+            const data = await res.json();
+            if (res.ok) {
+                setGscProperties(data.properties || []);
+            } else {
+                setGscError(data.message || data.error || 'Failed to load Search Console properties');
+            }
+        } catch {
+            setGscError('Failed to load Search Console properties');
+        } finally {
+            setIsCheckingGsc(false);
         }
     };
 
@@ -345,6 +368,41 @@ export default function ProfilePage() {
                     >
                         {savingConfig ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : <><Save size={16} /> Save Google API Config</>}
                     </button>
+
+                    <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button className="btn btn-outline" onClick={checkSearchConsole} disabled={isCheckingGsc || savingConfig || !googleIndexingConfig}>
+                                {isCheckingGsc ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
+                                <span style={{ marginLeft: '6px' }}>{isCheckingGsc ? 'Checking...' : 'Check Search Console access'}</span>
+                            </button>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>
+                                Required for sitemap submission and URL Inspection.
+                            </span>
+                        </div>
+
+                        {gscError && (
+                            <div style={{ marginTop: '12px', padding: '10px 14px', background: '#fef2f2', color: '#991b1b', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600 }}>
+                                {gscError}
+                            </div>
+                        )}
+
+                        {gscProperties && (
+                            gscProperties.length > 0 ? (
+                                <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', fontWeight: 700 }}>Properties:</span>
+                                    {gscProperties.map((property) => (
+                                        <span key={property.siteUrl} style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '999px', background: '#dcfce7', color: '#166534', fontWeight: 700 }}>
+                                            {property.siteUrl} · {property.permissionLevel}
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ marginTop: '12px', padding: '10px 14px', background: '#fffbeb', color: '#92400e', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600 }}>
+                                    No Search Console properties found. Add <strong>{serviceAccountEmail || 'the service account'}</strong> as an Owner in Search Console → Settings → Users &amp; Permissions.
+                                </div>
+                            )
+                        )}
+                    </div>
                 </motion.div>
             </div>
         </div>

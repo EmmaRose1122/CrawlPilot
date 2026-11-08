@@ -15,16 +15,8 @@ import {
 } from 'lucide-react';
 
 const botOptions = [
-    { id: 'google', name: 'GoogleBot', color: '#4285F4' },
-    { id: 'bing', name: 'BingBot', color: '#00A4EF' },
-    { id: 'openai', name: 'OpenAI Bot', color: '#10A37F' },
-    { id: 'baidu', name: 'Baidu Spider', color: '#DE0000' },
-    { id: 'yandex', name: 'Yandex Bot', color: '#FFCC00' },
-    { id: 'duck', name: 'DuckDuckGo', color: '#DE5833' },
-    { id: 'apple', name: 'AppleBot', color: '#000000' },
-    { id: 'pinterest', name: 'Pinterest Bot', color: '#E60023' },
-    { id: 'common', name: 'CommonCrawl', color: '#B0B0B0' },
-    { id: 'anthropic', name: 'ClaudeBot', color: '#D97757' }
+    { id: 'google', name: 'Google', color: '#4285F4' },
+    { id: 'bing', name: 'Bing', color: '#00A4EF' }
 ];
 
 export default function ManageUsersPage() {

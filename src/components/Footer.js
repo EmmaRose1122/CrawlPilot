@@ -28,7 +28,7 @@ export default function Footer() {
                             Crawl <span>Pilot</span>
                         </Link>
                         <p className="footer-tagline">
-                            Empowering search visibility through lightning-fast indexing and real-time crawl intelligence.
+                            Real URL submission with per-engine response tracking — no simulated signals, no fabricated metrics.
                         </p>
                         <div className="social-links">
                             <a href="https://twitter.com/crawlpilot" aria-label="Twitter" target="_blank" rel="noopener noreferrer"><Twitter size={20} /></a>

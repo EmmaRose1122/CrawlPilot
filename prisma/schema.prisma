@@ -25,8 +25,12 @@ model User {
   blogs           Blog[]
   indexingResults IndexingResult[]
   taskSubmissions TaskSubmission[]
+  submissionJobs  SubmissionJob[]
+  topupRequests   TopupRequest[]
+  supportTickets  SupportTicket[]
   googleIndexingConfig String?         @db.Text
   apiToken        String?          @unique
+  indexNowKey     String?          @unique
   referralCode    String?          @unique
   referredBy      String?
   createdAt       DateTime         @default(now())
@@ -91,6 +95,8 @@ model IndexingResult {
   user             User     @relation(fields: [userId], references: [id])
   signalingResults String?  @db.Text
   links            String?  @db.Text
+  indexStatus      String?  @db.Text
+  indexStatusCheckedAt DateTime?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -122,4 +128,54 @@ model TaskSubmission {
 
   task        Task     @relation(fields: [taskId], references: [id])
   user        User     @relation(fields: [userId], references: [id])
+}
+
+model SubmissionJob {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payload     String   @db.Text   // JSON: { records: [{id, url}], engines: [...] }
+  status      String   @default("pending") // pending | processing | done | failed | dead
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  lastError   String?  @db.Text
+  availableAt DateTime @default(now())
+  lockedAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, availableAt])
+  @@index([userId])
+}
+
+model TopupRequest {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount     Int
+  note       String?   @db.Text
+  status     String    @default("pending") // pending | approved | rejected
+  adminNote  String?   @db.Text
+  reviewedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+model SupportTicket {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category   String    @default("General")
+  message    String    @db.Text
+  status     String    @default("open") // open | answered | closed
+  adminReply String?   @db.Text
+  answeredAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId])
 }

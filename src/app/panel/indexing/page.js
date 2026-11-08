@@ -37,22 +37,13 @@ import {
 import { RealTimeManager } from '@/lib/realtime';
 
 const botOptions = [
-    { id: 'google', name: 'GoogleBot', desc: 'Primary SEO crawler', color: '#4285F4' },
-    { id: 'bing', name: 'BingBot', desc: 'Microsoft & Yahoo', color: '#00A4EF' },
-    { id: 'openai', name: 'OpenAI Bot', desc: 'ChatGPT discovery', color: '#10A37F' },
-    { id: 'baidu', name: 'Baidu Spider', desc: 'Asian market indexing', color: '#DE0000' },
-    { id: 'yandex', name: 'Yandex Bot', desc: 'Eastern Europe / Russia', color: '#FFCC00' },
-    { id: 'duck', name: 'DuckDuckGo', desc: 'Privacy-focused index', color: '#DE5833' },
-    { id: 'apple', name: 'AppleBot', desc: 'Siri & Spotlight hits', color: '#000000' },
-    { id: 'pinterest', name: 'Pinterest Bot', desc: 'Visual discovery signaling', color: '#E60023' },
-    { id: 'common', name: 'CommonCrawl', desc: 'Open data crawling', color: '#B0B0B0' },
-    { id: 'anthropic', name: 'ClaudeBot', desc: 'AI crawler for Claude', color: '#D97757' }
+    { id: 'google', name: 'Google', desc: 'Indexing API / HTTP check', color: '#4285F4' },
+    { id: 'bing', name: 'Bing', desc: 'IndexNow submission', color: '#00A4EF' }
 ];
 
 export default function IndexingPanel() {
     const { data: session, status } = useSession();
     const [showAddModal, setShowAddModal] = useState(false);
-    const [showCodeModal, setShowCodeModal] = useState(false);
     const [showBotLogModal, setShowBotLogModal] = useState(false);
     const [selectedBotLogs, setSelectedBotLogs] = useState(null);
     const [selectedBotForLogs, setSelectedBotForLogs] = useState(null);
@@ -62,59 +53,32 @@ export default function IndexingPanel() {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All Status');
     const [logFilterUrl, setLogFilterUrl] = useState('all');
-    const [copied, setCopied] = useState(false);
     const [realTimeLogs, setRealTimeLogs] = useState([]);
     const [activeResults, setActiveResults] = useState([]);
     const consoleRef = useRef(null);
     const [selectedBots, setSelectedBots] = useState(['google']); // Default to google for free plan
-    const [signalIntensity, setSignalIntensity] = useState('standard');
-    const [pingEnabled, setPingEnabled] = useState(true);
     const [isLiveFeedActive, setIsLiveFeedActive] = useState(true);
     const [realTimeManager, setRealTimeManager] = useState(null);
-    const trackingScript = `<script src="https://bot-tracker.crawlpilot.io/v1/track.js" async></script>`;
-    
-    const copyCode = () => {
-        navigator.clipboard.writeText(trackingScript).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        }).catch(err => {
-            console.error('Failed to copy:', err);
-        });
-    };
-    
+
     // User plan and bot access
     const [userPlan, setUserPlan] = useState('free');
     const [allowedBots, setAllowedBots] = useState(['google']);
     const [canAddLinks, setCanAddLinks] = useState(false);
-    const [web2Links, setWeb2Links] = useState([]);
-    const [selectedWeb2Links, setSelectedWeb2Links] = useState([]);
-    const [showWeb2Section, setShowWeb2Section] = useState(false);
     const [showAddLinksModal, setShowAddLinksModal] = useState(false);
     const [selectedResultForLinks, setSelectedResultForLinks] = useState(null);
     const [newLinkUrl, setNewLinkUrl] = useState('');
     const [showCreditsPopup, setShowCreditsPopup] = useState(false);
-
-    const userAgents = [
-        "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-        "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-        "Googlebot/2.1 (+http://www.google.com/bot.html)",
-        "Mozilla/5.0 (compatible; Googlebot-Image/1.0; +http://www.google.com/bot.html)",
-        "Googlebot-Video/1.0 (+http://www.google.com/bot.html)",
-        "Mozilla/5.0 (compatible; Googlebot-News; +http://www.google.com/bot.html)",
-        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1",
-        "Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.105 Mobile Safari/537.36",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0",
-        "Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1"
-    ];
-
-    const devices = ["Mobile (Googlebot)", "Smartphone (Android)", "Googlebot-Image", "Googlebot-News", "Desktop (Chrome)", "Desktop (Edge)", "Tablet (iPad)"];
+    const [hasGoogleConfig, setHasGoogleConfig] = useState(false);
+    const [inspectingId, setInspectingId] = useState(null);
+    const [isSubmittingSitemap, setIsSubmittingSitemap] = useState(false);
+    const [gscSitemapResult, setGscSitemapResult] = useState(null);
 
     const [userBalance, setUserBalance] = useState(0);
 
     const [totalSignals, setTotalSignals] = useState(0);
     const [totalUrls, setTotalUrls] = useState(0);
-    const [deliveredUrls, setDeliveredUrls] = useState(0);
+    const [acceptedUrls, setAcceptedUrls] = useState(0);
+    const [queuedJobs, setQueuedJobs] = useState(0);
     const [dailyStats, setDailyStats] = useState([]);
 
     // Filter logs based on selected URL
@@ -126,21 +90,43 @@ export default function IndexingPanel() {
         });
     }, [realTimeLogs, logFilterUrl]);
 
-    // Generates log lines from a saved DB result record (for persistent feed)
+    // Builds log lines strictly from stored engine outcomes — no fabricated data.
     const buildLogsFromRecord = (record) => {
         const ts = new Date(record.createdAt).toLocaleTimeString();
         const logs = [];
-        logs.push(`[${ts}] --- SYSTEM --- URL submitted: ${record.url}`);
-        record.bots.forEach(bot => {
-            const randIdx = Math.floor(Math.random() * userAgents.length);
-            const ua = userAgents[randIdx];
-            const device = devices[randIdx % devices.length];
-            logs.push(`[${ts}] --- SIGNAL --- ${bot.toUpperCase()} --- GET REQUEST dispatched for ${record.url}`);
-            logs.push(`[${ts}] --- UA --- ${ua.substring(0, 60)}...`);
-            logs.push(`[${ts}] --- HEADER --- Accept: text/html, Method: GET, Device: ${device}`);
-            logs.push(`[${ts}] --- LOG --- ${botOptions.find(b => b.id === bot)?.name} (${botOptions.find(b => b.id === bot)?.desc})`);
-        });
-        logs.push(`[${ts}] --- COMPLETED --- ${record.bots.length} engines signaled for ${record.url}`);
+        logs.push(`[${ts}] --- QUEUED --- ${record.url}`);
+
+        const engines = Array.isArray(record.signalingResults?.engines) ? record.signalingResults.engines : [];
+
+        if (engines.length > 0) {
+            engines.forEach((engine) => {
+                const methodLabel = engine.method && engine.method !== 'unknown' ? ` (${String(engine.method).toUpperCase()})` : '';
+                if (engine.ok) {
+                    logs.push(`[${ts}] --- RESULT --- ${String(engine.engine).toUpperCase()}${methodLabel}: HTTP ${engine.httpStatus} OK (${engine.responseTime ?? '?'}ms)`);
+                } else {
+                    const reason = engine.httpStatus ? `HTTP ${engine.httpStatus}` : (engine.error || 'request failed');
+                    logs.push(`[${ts}] --- RESULT --- ${String(engine.engine).toUpperCase()}${methodLabel}: ${reason}`);
+                }
+            });
+            const { successCount = 0, totalCount = 0 } = record.signalingResults;
+            if (record.status === 'submitted') {
+                logs.push(`[${ts}] --- STATUS --- Submitted: ${successCount}/${totalCount} engine requests accepted`);
+            } else if (record.status === 'partial') {
+                logs.push(`[${ts}] --- STATUS --- Partial: ${successCount}/${totalCount} engine requests accepted`);
+            } else if (record.status === 'failed') {
+                logs.push(`[${ts}] --- STATUS --- Failed: ${successCount}/${totalCount} engine requests accepted`);
+            }
+            if (record.signalingResults.apiUsed) {
+                logs.push(`[${ts}] --- GOOGLE API --- ${record.signalingResults.apiStatus || 'NONE'}`);
+            }
+        } else if (record.status === 'queued' || record.status === 'processing') {
+            logs.push(`[${ts}] --- STATUS --- ${String(record.status).toUpperCase()} — waiting for engine responses`);
+        } else if (record.status === 'failed') {
+            logs.push(`[${ts}] --- STATUS --- FAILED — no engine response recorded`);
+        } else if (record.status === 'submitted' || record.status === 'partial') {
+            logs.push(`[${ts}] --- STATUS --- ${String(record.status).toUpperCase()}`);
+        }
+
         return logs;
     };
 
@@ -152,6 +138,7 @@ export default function IndexingPanel() {
                 const parsed = dataResults.map(r => {
                     let bots = [];
                     let signalingResults = {};
+                    let indexStatus = null;
                     try {
                         bots = typeof r.bots === 'string' ? JSON.parse(r.bots) : r.bots;
                         if (!Array.isArray(bots)) bots = [];
@@ -163,7 +150,12 @@ export default function IndexingPanel() {
                     } catch (e) {
                         signalingResults = {};
                     }
-                    return { ...r, bots, signalingResults };
+                    try {
+                        indexStatus = typeof r.indexStatus === 'string' ? JSON.parse(r.indexStatus) : r.indexStatus || null;
+                    } catch (e) {
+                        indexStatus = null;
+                    }
+                    return { ...r, bots, signalingResults, indexStatus };
                 });
                 setActiveResults(parsed);
 
@@ -211,12 +203,16 @@ export default function IndexingPanel() {
                 setCanAddLinks(userProfile.canAddLinks);
             }
 
+            // Search Console tools need a saved Google service account config.
+            setHasGoogleConfig(!!userProfile?.googleIndexingConfig);
+
             // Fetch stats for day-wise data
             const resStats = await fetch('/api/user/stats');
             if (resStats.ok) {
                 const statsData = await resStats.json();
                 setTotalUrls(statsData.totalUrls || 0);
-                setDeliveredUrls(statsData.delivered || 0);
+                setAcceptedUrls(statsData.accepted || 0);
+                setQueuedJobs(statsData.queuedJobs || 0);
                 setDailyStats(statsData.dailyStats || []);
                 setTotalSignals(statsData.totalBotSignals || 0);
             }
@@ -350,114 +346,42 @@ export default function IndexingPanel() {
         setShowBotLogModal(true);
     };
 
-    // Generate per-bot logs from the real stored signaling results
+    // Builds this engine's log strictly from the stored per-engine outcome.
     const generateBotLogs = (result, botId) => {
         const ts = new Date(result.createdAt).toLocaleTimeString();
         const bot = botOptions.find(b => b.id === botId);
         const signaling = result.signalingResults || {};
+        const engines = Array.isArray(signaling.engines) ? signaling.engines : [];
+        const outcome = engines.find(e => e.engine === botId);
         const logs = [];
 
-        logs.push(`[${ts}] --- SYSTEM --- Bot Log for ${bot?.name || botId}`);
+        logs.push(`[${ts}] --- ENGINE --- ${bot?.name || botId}`);
         logs.push(`[${ts}] --- TARGET --- ${result.url}`);
 
-        if (signaling.successCount !== undefined || signaling.totalCount !== undefined) {
-            const successCount = signaling.successCount ?? 0;
-            const totalCount = signaling.totalCount ?? 0;
-            const failedCount = totalCount - successCount;
-
-            logs.push(`[${ts}] --- RESULT --- ${successCount}/${totalCount} signals succeeded${failedCount > 0 ? `, ${failedCount} failed` : ''}`);
-            logs.push(`[${ts}] --- SUCCESS RATE --- ${typeof signaling.successRate === 'number' ? signaling.successRate.toFixed(1) : 0}%`);
-
-            if (signaling.apiUsed) {
-                logs.push(`[${ts}] --- GOOGLE API --- ${signaling.apiStatus === 'API_SUCCESS' ? 'SUCCESS' : signaling.apiStatus === 'API_FAILED' ? 'FAILED' : 'NOT USED'}`);
+        if (outcome) {
+            const methodLabel = outcome.method ? String(outcome.method).toUpperCase() : 'REQUEST';
+            if (outcome.ok) {
+                logs.push(`[${ts}] --- ${methodLabel} --- HTTP ${outcome.httpStatus} accepted${outcome.responseTime ? ` in ${outcome.responseTime}ms` : ''}`);
+            } else {
+                logs.push(`[${ts}] --- ${methodLabel} --- ${outcome.httpStatus ? `HTTP ${outcome.httpStatus}` : (outcome.error || 'request failed')}`);
+                if (outcome.error && outcome.httpStatus) {
+                    logs.push(`[${ts}] --- REASON --- ${outcome.error}`);
+                }
             }
-        } else if (signaling.apiStatus) {
-            logs.push(`[${ts}] --- GOOGLE API --- ${signaling.apiStatus === 'API_SUCCESS' ? 'SUCCESS' : signaling.apiStatus === 'API_FAILED' ? 'FAILED' : 'NOT USED'}`);
+        } else if (result.status === 'queued' || result.status === 'processing') {
+            logs.push(`[${ts}] --- STATUS --- Queued — waiting for engine response`);
         } else {
-            logs.push(`[${ts}] --- STATUS --- Signal queued — results pending`);
+            logs.push(`[${ts}] --- STATUS --- No response recorded for this engine`);
         }
 
-        logs.push(`[${ts}] --- COMPLETED --- ${bot?.name || botId} signal processed`);
+        if (signaling.apiUsed) {
+            logs.push(`[${ts}] --- GOOGLE API --- ${signaling.apiStatus === 'API_SUCCESS' ? 'SUCCESS' : signaling.apiStatus === 'API_FAILED' ? 'FAILED' : 'NOT USED'}`);
+        }
+
+        logs.push(`[${ts}] --- FINAL --- ${String(result.status || 'queued').toUpperCase()}`);
 
         return logs;
     };
-
-    // Web 2.0 platforms for link generation
-    const web2Platforms = [
-        { name: 'conalepmorelos.edu.mx', path: '/FeriaProfesiografica/uni.php?u=12&n=Universidad%20Mesoamericana%20Plantel%20Cuernavaca&d=' },
-        { name: 'moh.gov.mm', path: '/docs?url=' },
-        { name: 'censocquipamiento.laplata-conicct.gov.ar', path: '/api.php?action=' },
-        { name: 'english.edusites.co.uk', path: '/?URL=' },
-        { name: 'unam.mx', path: '/buscar?q=' },
-        { name: 'edu.mx', path: '/portal/redirect?to=' },
-        { name: 'gov.in', path: '/siteRedirect?url=' },
-        { name: 'ac.uk', path: '/redirect?link=' },
-        { name: 'edu.au', path: '/goto?url=' },
-        { name: 'wordpress.com', path: '/?redirect=' },
-        { name: 'blogspot.com', path: '/redirect?to=' },
-        { name: 'medium.com', path: '/r/?url=' },
-        { name: 'wix.com', path: '/site/index.php?url=' },
-        { name: 'weebly.com', path: '/go?to=' },
-    ];
-
-    // Generate Web 2.0 links from user URLs
-    const generateWeb2Links = (urls) => {
-        const links = [];
-        urls.forEach((url, urlIndex) => {
-            web2Platforms.forEach((platform, platformIndex) => {
-                const id = `web2-${urlIndex}-${platformIndex}`;
-                const web2Url = `https://www.${platform.name}${platform.path}${encodeURIComponent(url)}`;
-                links.push({
-                    id,
-                    originalUrl: url,
-                    web2Url,
-                    platform: platform.name,
-                    selected: false
-                });
-            });
-        });
-        return links;
-    };
-
-    // Toggle Web 2.0 link selection
-    const toggleWeb2Link = (id) => {
-        setSelectedWeb2Links(prev => {
-            if (prev.includes(id)) {
-                return prev.filter(lid => lid !== id);
-            } else {
-                return [...prev, id];
-            }
-        });
-    };
-
-    // Select all Web 2.0 links
-    const selectAllWeb2Links = () => {
-        const allIds = web2Links.map(l => l.id);
-        setSelectedWeb2Links(allIds);
-    };
-
-    // Deselect all Web 2.0 links
-    const deselectAllWeb2Links = () => {
-        setSelectedWeb2Links([]);
-    };
-
-    // Generate Web 2.0 links when user types URLs
-    useEffect(() => {
-        if (inputText.trim() && modalTab === 'List') {
-            const urls = inputText.split('\n').map(u => u.trim()).filter(u => u !== '');
-            if (urls.length > 0) {
-                const links = generateWeb2Links(urls);
-                setWeb2Links(links);
-                setShowWeb2Section(true);
-            } else {
-                setWeb2Links([]);
-                setShowWeb2Section(false);
-            }
-        } else {
-            setWeb2Links([]);
-            setShowWeb2Section(false);
-        }
-    }, [inputText, modalTab]);
 
     const [autoSync, setAutoSync] = useState(false);
     const syncTimerRef = useRef(null);
@@ -484,9 +408,9 @@ export default function IndexingPanel() {
                 if (data.urls && data.urls.length > 0) {
                     urls = data.urls;
                     const sitemapLogs = [
-                        `[${timestamp}] --- SYSTEM --- Sitemap Detected: ${sitemapUrl}`,
-                        `[${timestamp}] --- SYSTEM --- Successfully parsed sitemap: Found ${data.total} URLs`,
-                        `[${timestamp}] --- SYSTEM --- Processing ${data.count} URLs for discovery`
+                        `[${timestamp}] --- SITEMAP --- Detected: ${sitemapUrl}`,
+                        `[${timestamp}] --- SITEMAP --- Parsed ${data.total} URL(s)`,
+                        `[${timestamp}] --- SITEMAP --- Queueing ${data.count} URL(s) for submission`
                     ];
                     setRealTimeLogs(prev => [...sitemapLogs, ...prev]);
 
@@ -503,10 +427,11 @@ export default function IndexingPanel() {
 
                     const submitData = await submitResponse.json();
                     setRealTimeLogs(prev => [
-                        `[${new Date().toLocaleTimeString()}] --- COMPLETED --- ${submitData.count ?? urls.length} sitemap URLs submitted across ${submitData.botsUsed?.length ?? selectedBots.length} engines.`,
+                        `[${new Date().toLocaleTimeString()}] --- QUEUED --- ${submitData.count ?? urls.length} sitemap URL(s) across ${submitData.botsUsed?.length ?? selectedBots.length} engine(s). Waiting for responses...`,
                         ...prev
                     ].slice(0, 400));
                     await fetchInitialData();
+                    await pollForOutcomes();
 
                     // Setup Auto-Sync if enabled
                     if (autoSync) {
@@ -532,87 +457,33 @@ export default function IndexingPanel() {
             urls = inputText.split('\n').map(u => u.trim()).filter(u => u !== '');
             if (urls.length === 0) return;
             setIsSubmitting(true);
-            await processUrls(urls, timestamp);
+            await processUrls(urls);
         }
     };
 
-    const processUrls = async (urls, timestamp) => {
-        // Get selected Web 2.0 URLs
-        const selectedWeb2Urls = web2Links
-            .filter(link => selectedWeb2Links.includes(link.id))
-            .map(link => link.web2Url);
-        
-        // Combine user URLs with Web 2.0 links
-        const allUrls = [...urls, ...selectedWeb2Urls];
-        
+    // Submits URLs and waits for real engine outcomes via polling.
+    const processUrls = async (urls) => {
         try {
             const res = await fetch('/api/indexing/discover', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ urls: allUrls, bots: selectedBots })
+                body: JSON.stringify({ urls, bots: selectedBots })
             });
 
             if (res.ok) {
+                const data = await res.json().catch(() => ({}));
                 setShowAddModal(false);
                 setInputText('');
-                setSelectedWeb2Links([]);
-                setWeb2Links([]);
 
-                for (let i = 0; i < allUrls.length; i++) {
-                    const url = allUrls[i];
-                    const ts = new Date().toLocaleTimeString();
-                    const isWeb2Link = selectedWeb2Urls.includes(url);
-
-                    // URL header separator
-                    setRealTimeLogs(prev => [
-                        `[${ts}] ─────────── URL ${i + 1}/${allUrls.length}: ${url} ───────────`,
-                        ...(isWeb2Link ? [`[${ts}] --- TYPE --- Web 2.0 Authority Link`] : []),
-                        ...prev
-                    ].slice(0, 400));
-                    await new Promise(r => setTimeout(r, 300));
-
-                    for (const bot of selectedBots) {
-                        const randIdx = Math.floor(Math.random() * userAgents.length);
-                        const ua = userAgents[randIdx];
-                        const device = devices[randIdx % devices.length];
-
-                        // Bot-specific delay based on intensity
-                        const baseDelay = signalIntensity === 'extreme' ? 200 : signalIntensity === 'aggressive' ? 300 : 400;
-                        const botDelay = baseDelay + Math.random() * 200; // Add some randomness
-
-                        setRealTimeLogs(prev => [
-                            `[${ts}] --- HEADER --- Accept: text/html,application/xhtml+xml, Method: GET, Device: ${device}`,
-                            `[${ts}] --- UA --- ${ua.substring(0, 65)}...`,
-                            `[${ts}] --- SIGNAL --- ${bot.toUpperCase()} --- GET ${url}`,
-                            ...prev
-                        ].slice(0, 400));
-                        setTotalSignals(prev => prev + 1);
-
-                        // Delay between each bot — feels real, not spammy
-                        await new Promise(r => setTimeout(r, botDelay));
-                    }
-
-                    if (pingEnabled) {
-                        const ts2 = new Date().toLocaleTimeString();
-                        setRealTimeLogs(prev => [
-                            `[${ts2}] --- BROADCAST --- ${selectedBots.length} engine signals confirmed for ${url}`,
-                            ...prev
-                        ].slice(0, 400));
-                        await new Promise(r => setTimeout(r, 300));
-                    }
-                }
-
-                // Final completed summary
-                const tsFinal = new Date().toLocaleTimeString();
+                const skipped = Array.isArray(data.skippedUrls) ? data.skippedUrls : [];
                 setRealTimeLogs(prev => [
-                    `[${tsFinal}] --- COMPLETED --- ${allUrls.length * selectedBots.length} total signals dispatched across ${selectedBots.length} engines for ${allUrls.length} URL(s).`,
-                    `[${tsFinal}] --- BREAKDOWN --- ${urls.length} user URLs + ${selectedWeb2Urls.length} Web 2.0 links`,
+                    `[${new Date().toLocaleTimeString()}] --- QUEUED --- ${data.count ?? urls.length} URL(s) across ${selectedBots.length} engine(s). Waiting for responses...`,
+                    ...skipped.map(item => `[${new Date().toLocaleTimeString()}] --- SKIPPED --- ${item.url} (${item.reason})`),
                     ...prev
                 ].slice(0, 400));
 
-                // Re-sync from DB to update results list & total count
                 await fetchInitialData();
-
+                await pollForOutcomes();
             } else {
                 const error = await res.json();
                 if (res.status === 402 || error.error === 'INSUFFICIENT_CREDITS') {
@@ -622,9 +493,42 @@ export default function IndexingPanel() {
                 }
             }
         } catch (err) {
-            console.error('Discovery submission error:', err);
+            console.error('Submission error:', err);
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    // Polls stored results until background processing finishes, then shows the
+    // real per-engine outcomes instead of simulated progress logs.
+    const pollForOutcomes = async () => {
+        for (let attempt = 0; attempt < 15; attempt++) {
+            await new Promise(r => setTimeout(r, 3000));
+            try {
+                const res = await fetch('/api/indexing/discover');
+                if (!res.ok) return;
+                const data = await res.json().catch(() => null);
+                if (!Array.isArray(data)) return;
+
+                const pending = data.filter(r => r.status === 'queued' || r.status === 'processing');
+                if (pending.length === 0) {
+                    const parsed = data.map(r => {
+                        let signalingResults = {};
+                        try {
+                            signalingResults = typeof r.signalingResults === 'string' ? JSON.parse(r.signalingResults) : r.signalingResults || {};
+                        } catch {
+                            signalingResults = {};
+                        }
+                        return { ...r, signalingResults };
+                    });
+                    setRealTimeLogs(parsed.flatMap(r => buildLogsFromRecord(r)).slice(0, 300));
+                    await fetchInitialData();
+                    return;
+                }
+            } catch (err) {
+                console.warn('Outcome polling failed:', err);
+                return;
+            }
         }
     };
 
@@ -669,6 +573,75 @@ export default function IndexingPanel() {
         }
     };
 
+    // Runs Google's URL Inspection API for a stored record.
+    const checkIndexStatus = async (resultId) => {
+        setInspectingId(resultId);
+        try {
+            const res = await fetch('/api/indexing/google/inspect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ resultId }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.message || data.error || 'URL inspection failed');
+                return;
+            }
+            await fetchInitialData();
+        } catch {
+            alert('URL inspection failed');
+        } finally {
+            setInspectingId(null);
+        }
+    };
+
+    // Submits the sitemap to Google Search Console for the matching property.
+    const submitSitemapToGoogle = async () => {
+        const sitemapUrl = inputText.trim();
+        if (!sitemapUrl) return;
+
+        setIsSubmittingSitemap(true);
+        setGscSitemapResult(null);
+        try {
+            const res = await fetch('/api/indexing/google/sitemap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sitemapUrl }),
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                const lastSubmitted = data.status?.lastSubmitted
+                    ? ` · last submitted ${new Date(data.status.lastSubmitted).toLocaleString()}`
+                    : '';
+                const pending = data.status?.isPending ? ' · Google re-processing (pending)' : '';
+                setGscSitemapResult({ ok: true, text: `Submitted to ${data.siteUrl}${lastSubmitted}${pending}` });
+            } else {
+                setGscSitemapResult({ ok: false, text: data.message || data.error || 'Sitemap submission failed' });
+            }
+        } catch {
+            setGscSitemapResult({ ok: false, text: 'Sitemap submission failed' });
+        } finally {
+            setIsSubmittingSitemap(false);
+        }
+    };
+
+    // Maps a stored submission status to honest badge styling.
+    const statusMeta = (status) => {
+        switch (status) {
+            case 'submitted':
+                return { label: 'SUBMITTED', bg: 'rgba(16,185,129,0.1)', color: 'var(--success)' };
+            case 'partial':
+                return { label: 'PARTIAL', bg: 'rgba(245,158,11,0.12)', color: '#b45309' };
+            case 'failed':
+                return { label: 'FAILED', bg: 'rgba(239,68,68,0.1)', color: '#dc2626' };
+            case 'processing':
+                return { label: 'PROCESSING', bg: 'rgba(59,130,246,0.1)', color: 'var(--primary)' };
+            default:
+                return { label: 'QUEUED', bg: 'rgba(100,116,139,0.12)', color: '#475569' };
+        }
+    };
+
     if (status === "loading") {
         return (
             <div className="indexing-panel" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
@@ -696,19 +669,16 @@ export default function IndexingPanel() {
             <div className="panel-page-header" style={{ maxWidth: '100%' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
-                        <h1 className="panel-page-title">Discovery Console</h1>
-                        <p className="panel-page-subtitle">Signal 10+ Global Search & AI Engines in real-time.</p>
+                        <h1 className="panel-page-title">Submission Console</h1>
+                        <p className="panel-page-subtitle">Submit URLs to the engines that support programmatic indexing, then track real per-engine acceptance.</p>
                     </div>
                     <div className="header-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <div className="panel-card" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--primary-light)', background: 'var(--primary-light)08' }}>
                             <Radio size={16} className="text-primary animate-pulse" />
-                            <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>SIGNALS DISPATCHED: <span className="text-primary">{totalSignals.toLocaleString()}</span></span>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>ENGINE REQUESTS: <span className="text-primary">{totalSignals.toLocaleString()}</span></span>
                         </div>
-                        <button className="btn btn-outline" onClick={() => setShowCodeModal(true)}>
-                            <Code2 size={18} /> JS Tracker
-                        </button>
                         <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-                            <Plus size={18} /> New Discovery
+                            <Plus size={18} /> New Submission
                         </button>
                     </div>
                 </div>
@@ -717,58 +687,33 @@ export default function IndexingPanel() {
             <div className="grid grid-4 gap-4 mb-4" style={{ '--grid-cols': 4 }}>
                 <div className="panel-card" style={{ padding: '20px' }}>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px', color: 'var(--primary)' }}>
-                        <Zap size={18} /> <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>INTENSITY</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-light)', padding: '4px', borderRadius: '12px' }}>
-                        {['standard', 'aggressive', 'extreme'].map(lv => (
-                            <button
-                                key={lv}
-                                onClick={() => setSignalIntensity(lv)}
-                                style={{
-                                    flex: 1,
-                                    padding: '8px',
-                                    borderRadius: '8px',
-                                    fontSize: '0.7rem',
-                                    fontWeight: 700,
-                                    textTransform: 'uppercase',
-                                    background: signalIntensity === lv ? 'white' : 'transparent',
-                                    color: signalIntensity === lv ? 'var(--primary)' : 'var(--text-light)',
-                                    boxShadow: signalIntensity === lv ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
-                                }}
-                            >
-                                {lv}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                <div className="panel-card" style={{ padding: '20px' }}>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px', color: 'var(--primary)' }}>
-                        <Globe size={18} /> <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>ACTIVE BOTS</span>
+                        <Search size={18} /> <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>SELECTED ENGINES</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                        <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>{botOptions.length} Engines</span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: 700 }}>● ONLINE</span>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>{selectedBots.length} of {botOptions.length}</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-light)', fontWeight: 700 }}>for next submission</span>
                     </div>
                 </div>
                 <div className="panel-card" style={{ padding: '20px' }}>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px', color: 'var(--primary)' }}>
-                        <Activity size={18} /> <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>AUTO-PING</span>
+                        <Globe size={18} /> <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>AVAILABLE ENGINES</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>{allowedBots.length} Allowed</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-light)', fontWeight: 700 }}>by your plan</span>
+                    </div>
+                </div>
+                <div className="panel-card" style={{ padding: '20px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '12px', color: 'var(--primary)' }}>
+                        <Activity size={18} /> <span style={{ fontWeight: 800, fontSize: '0.8rem' }}>IN PROGRESS</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>{pingEnabled ? 'ACTIVE' : 'DISABLED'}</span>
-                        <div
-                            onClick={() => setPingEnabled(!pingEnabled)}
-                            style={{
-                                width: '40px',
-                                height: '22px',
-                                background: pingEnabled ? 'var(--primary)' : 'var(--border-color)',
-                                borderRadius: '20px',
-                                position: 'relative',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <motion.div animate={{ x: pingEnabled ? 20 : 2 }} style={{ width: '18px', height: '18px', background: 'white', borderRadius: '50%', position: 'absolute', top: 2 }} />
-                        </div>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>
+                            {activeResults.filter(r => r.status === 'queued' || r.status === 'processing').length} Queued
+                        </span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-light)', fontWeight: 700 }}>
+                            {queuedJobs} job{queuedJobs === 1 ? '' : 's'} · syncing
+                        </span>
                     </div>
                 </div>
                 <div className="panel-card" style={{ padding: '20px' }}>
@@ -791,9 +736,9 @@ export default function IndexingPanel() {
                             const today = dailyStats.find(s => s.date === todayKey);
                             if (today) {
                                 const signals = (today.primary || 0) + (today.ai || 0);
-                                return `${today.count} delivered · ${signals} signals`;
+                                return `${today.count} submitted · ${signals} engine requests`;
                             }
-                            return deliveredUrls > 0 ? `${deliveredUrls} delivered · ${totalSignals} signals` : 'No activity today';
+                            return acceptedUrls > 0 ? `${acceptedUrls} accepted · ${totalSignals} engine requests` : 'No activity today';
                         })()}
                     </div>
                 </div>
@@ -974,20 +919,22 @@ export default function IndexingPanel() {
                 </div>
                 <div className="filter-group" style={{ maxWidth: '200px' }}>
                     <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ fontWeight: 600 }}>
-                        <option>All Status</option>
-                        <option>Delivered</option>
-                        <option>Pending</option>
+                        <option value="All Status">All Status</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="partial">Partial</option>
+                        <option value="failed">Failed</option>
+                        <option value="queued">Queued</option>
                     </select>
                 </div>
-                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>Advanced Discovery</button>
+                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>New Submission</button>
             </div>
 
             <div className="panel-card mb-4" style={{ padding: 0, overflow: 'hidden' }}>
                 <div className="indexing-console-header">
-                    <div className="real-time-indicator"><div className="indicator-dot"></div> Live Signal Feed</div>
+                    <div className="real-time-indicator"><div className="indicator-dot"></div> Submission Log</div>
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)' }}>Node: GLOBAL-EDGE-1</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: 700 }}>● STATUS: OPTIMAL</div>
+                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)' }}>Source: stored results</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: 700 }}>● SYNC: AUTO (30s)</div>
                         <select
                             value={logFilterUrl}
                             onChange={(e) => setLogFilterUrl(e.target.value)}
@@ -1021,11 +968,11 @@ export default function IndexingPanel() {
                                 marginBottom: '6px',
                                 fontSize: '0.72rem',
                                 lineHeight: '1.5',
-                                color: text.includes('COMPLETED') ? '#64ffda'
-                                    : text.includes('SIGNAL') ? '#00e676'
-                                        : text.includes('SYSTEM') || text.includes('AUTO-SYNC') ? '#ffab00'
-                                            : text.includes('BROADCAST') ? '#ffd740'
-                                                : text.includes('UA') || text.includes('HEADER') ? 'rgba(255,255,255,0.5)'
+                                color: text.includes('SUBMITTED') ? '#64ffda'
+                                    : text.includes('RESULT') ? '#00e676'
+                                        : text.includes('SKIPPED') || text.includes('FAILED') ? '#ff8a80'
+                                            : text.includes('QUEUED') || text.includes('STATUS') ? '#ffab00'
+                                                : text.includes('GOOGLE API') ? '#ffd740'
                                                     : '#fff'
                             }}>
                                 {text}
@@ -1034,13 +981,13 @@ export default function IndexingPanel() {
                     })}
                     {!filteredLogs.length && (
                         <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}>
-                            — Listening for incoming signals on GLOBAL-EDGE-1 —
+                            — No submissions yet. Stored engine results will appear here. —
                         </div>
                     )}
                 </div>
                 <div style={{ padding: '8px 20px', background: '#111', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)' }}>
-                        {filteredLogs.length} entries · {totalSignals.toLocaleString()} total signals dispatched
+                        {filteredLogs.length} entries · {totalSignals.toLocaleString()} engine requests recorded
                     </span>
                     {realTimeLogs.length > 0 && (
                         <button
@@ -1054,7 +1001,10 @@ export default function IndexingPanel() {
             </div>
 
             <div className="url-result-list">
-                {activeResults.filter(r => r.url.toLowerCase().includes(searchQuery.toLowerCase())).map((res) => (
+                {activeResults
+                    .filter(r => r.url.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .filter(r => statusFilter === 'All Status' || r.status === statusFilter)
+                    .map((res) => (
                     <motion.div key={res.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="panel-card url-result-card">
                         <div className="result-main">
                             <div className="result-url">
@@ -1063,7 +1013,7 @@ export default function IndexingPanel() {
                             <div className="bot-tag-list" style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px', maxWidth: '100%' }}>
                                 {res.bots.slice(0, 4).map(bot => (
                                     <div key={bot} className="bot-tag" style={{ background: botOptions.find(b => b.id === bot)?.color + '15', color: botOptions.find(b => b.id === bot)?.color }}>
-                                        {bot.charAt(0).toUpperCase() + bot.slice(1)} Success
+                                        {botOptions.find(b => b.id === bot)?.name || bot}
                                     </div>
                                 ))}
                                 {res.bots.length > 4 && <div className="bot-tag">+{res.bots.length - 4} more</div>}
@@ -1117,12 +1067,59 @@ export default function IndexingPanel() {
                                     Add Links
                                     {!canAddLinks && <span style={{ fontSize: '0.6rem', marginLeft: '4px' }}>🔒</span>}
                                 </button>
+                                {hasGoogleConfig && (
+                                    <button
+                                        onClick={() => checkIndexStatus(res.id)}
+                                        disabled={inspectingId === res.id}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            padding: '6px 12px',
+                                            borderRadius: '8px',
+                                            border: '1px solid var(--border-color)',
+                                            background: 'white',
+                                            cursor: inspectingId === res.id ? 'wait' : 'pointer',
+                                            fontSize: '0.75rem',
+                                            fontWeight: 600,
+                                            whiteSpace: 'nowrap',
+                                            opacity: inspectingId === res.id ? 0.7 : 1
+                                        }}
+                                    >
+                                        {inspectingId === res.id ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />}
+                                        {inspectingId === res.id ? 'Checking...' : 'Google index status'}
+                                    </button>
+                                )}
                             </div>
                         </div>
                         <div className="result-meta" style={{ minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-                            <div className="badge badge-success" style={{ padding: '8px 16px', width: '100%', justifyContent: 'center' }}>
-                                <CheckCircle2 size={16} /> INDEXING PINGED
-                            </div>
+                            {(() => {
+                                const meta = statusMeta(res.status);
+                                return (
+                                    <div className="badge" style={{ padding: '8px 16px', width: '100%', justifyContent: 'center', background: meta.bg, color: meta.color, fontWeight: 800, fontSize: '0.7rem' }}>
+                                        {res.status === 'submitted' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />} {meta.label}
+                                    </div>
+                                );
+                            })()}
+                            {res.indexStatus?.result && (() => {
+                                const verdict = res.indexStatus.result.verdict || 'UNKNOWN';
+                                const verdictMap = {
+                                    PASS: { label: 'INDEXED', bg: 'rgba(16,185,129,0.1)', color: 'var(--success)' },
+                                    PARTIAL: { label: 'PARTIAL', bg: 'rgba(245,158,11,0.12)', color: '#b45309' },
+                                    FAIL: { label: 'NOT INDEXED', bg: 'rgba(239,68,68,0.1)', color: '#dc2626' },
+                                    NEUTRAL: { label: 'NEUTRAL', bg: 'rgba(245,158,11,0.12)', color: '#b45309' }
+                                };
+                                const meta = verdictMap[verdict] || { label: verdict, bg: 'rgba(100,116,139,0.12)', color: '#475569' };
+                                return (
+                                    <div
+                                        className="badge"
+                                        title={res.indexStatus.result.coverageState || ''}
+                                        style={{ padding: '6px 12px', width: '100%', justifyContent: 'center', background: meta.bg, color: meta.color, fontWeight: 800, fontSize: '0.65rem' }}
+                                    >
+                                        GOOGLE INDEX: {meta.label}
+                                    </div>
+                                );
+                            })()}
                             {res.signalingResults?.apiStatus === 'API_SUCCESS' && (
                                 <div className="badge" style={{ 
                                     padding: '8px 16px', 
@@ -1169,7 +1166,7 @@ export default function IndexingPanel() {
                     <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 110, display: 'flex', alignItems: 'center', justify: 'center', padding: '20px' }}>
                         <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="panel-card" style={{ width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px', borderBottom: '1px solid var(--border-color)' }}>
-                                <h2 style={{ fontSize: '1.4rem' }}>Advanced Discovery Engine</h2>
+                                <h2 style={{ fontSize: '1.4rem' }}>New Submission</h2>
                                 <button onClick={() => setShowAddModal(false)}><X size={24} /></button>
                             </div>
 
@@ -1210,7 +1207,7 @@ export default function IndexingPanel() {
                                         <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                             <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', margin: 0 }}>
                                                 <AlertCircle size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                                                We will crawl this sitemap and automatically extract all internal links for indexing.
+                                                We will crawl this sitemap and automatically extract all internal links for submission.
                                             </p>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--bg-light)', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                                                 <div>
@@ -1218,7 +1215,7 @@ export default function IndexingPanel() {
                                                         <RefreshCw size={14} style={{ display: 'inline', marginRight: '6px', color: 'var(--primary)' }} />
                                                         Auto-Sync Mode
                                                     </div>
-                                                    <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: 'var(--text-light)' }}>Re-crawl & re-signal sitemap every 5 minutes automatically.</p>
+                                                    <p style={{ margin: '2px 0 0', fontSize: '0.7rem', color: 'var(--text-light)' }}>Re-crawl the sitemap every 5 minutes automatically.</p>
                                                 </div>
                                                 <div
                                                     onClick={() => setAutoSync(!autoSync)}
@@ -1227,96 +1224,33 @@ export default function IndexingPanel() {
                                                     <motion.div animate={{ x: autoSync ? 22 : 2 }} style={{ width: '20px', height: '20px', background: 'white', borderRadius: '50%', position: 'absolute', top: 2, boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
                                                 </div>
                                             </div>
+
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', padding: '12px 16px', background: 'var(--primary-light)', borderRadius: '12px' }}>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline btn-sm"
+                                                    onClick={submitSitemapToGoogle}
+                                                    disabled={!hasGoogleConfig || isSubmittingSitemap || !inputText.trim()}
+                                                    title={!hasGoogleConfig ? 'Add your Google service account in My profile first' : ''}
+                                                >
+                                                    {isSubmittingSitemap ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} />}
+                                                    <span style={{ marginLeft: '6px' }}>{isSubmittingSitemap ? 'Submitting...' : 'Submit sitemap to Google'}</span>
+                                                </button>
+                                                <span style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>
+                                                    {hasGoogleConfig
+                                                        ? 'Submits via Search Console for the matching property.'
+                                                        : 'Needs a Google service account (My profile → Google Indexing API).'}
+                                                </span>
+                                            </div>
+
+                                            {gscSitemapResult && (
+                                                <div style={{ padding: '10px 14px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: 600, background: gscSitemapResult.ok ? '#dcfce7' : '#fef2f2', color: gscSitemapResult.ok ? '#166534' : '#991b1b' }}>
+                                                    {gscSitemapResult.text}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
-
-                                {/* Web 2.0 Links Section */}
-                                {showWeb2Section && web2Links.length > 0 && (
-                                    <div style={{ marginBottom: '32px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                            <label className="text-xs font-bold uppercase block text-primary">
-                                                Web 2.0 Links ({web2Links.length})
-                                            </label>
-                                            <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button
-                                                    onClick={selectAllWeb2Links}
-                                                    style={{ fontSize: '0.7rem', padding: '4px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'white', cursor: 'pointer' }}
-                                                >
-                                                    Select All
-                                                </button>
-                                                <button
-                                                    onClick={deselectAllWeb2Links}
-                                                    style={{ fontSize: '0.7rem', padding: '4px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'white', cursor: 'pointer' }}
-                                                >
-                                                    Deselect All
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div style={{ 
-                                            maxHeight: '300px', 
-                                            overflowY: 'auto', 
-                                            border: '1px solid var(--border-color)', 
-                                            borderRadius: '12px', 
-                                            padding: '16px',
-                                            background: '#fafafa'
-                                        }}>
-                                            {web2Links.map((link, index) => (
-                                                <div 
-                                                    key={link.id}
-                                                    onClick={() => toggleWeb2Link(link.id)}
-                                                    style={{
-                                                        display: 'flex',
-                                                        alignItems: 'flex-start',
-                                                        gap: '12px',
-                                                        padding: '12px',
-                                                        marginBottom: '8px',
-                                                        background: selectedWeb2Links.includes(link.id) ? '#e8f5e9' : 'white',
-                                                        border: `1.5px solid ${selectedWeb2Links.includes(link.id) ? '#4caf50' : '#e0e0e0'}`,
-                                                        borderRadius: '8px',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                >
-                                                    <div style={{
-                                                        width: '20px',
-                                                        height: '20px',
-                                                        borderRadius: '4px',
-                                                        border: `2px solid ${selectedWeb2Links.includes(link.id) ? '#4caf50' : '#bdbdbd'}`,
-                                                        background: selectedWeb2Links.includes(link.id) ? '#4caf50' : 'white',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        flexShrink: 0,
-                                                        marginTop: '2px'
-                                                    }}>
-                                                        {selectedWeb2Links.includes(link.id) && (
-                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                                                                <polyline points="20 6 9 17 4 12"/>
-                                                            </svg>
-                                                        )}
-                                                    </div>
-                                                    <div style={{ flex: 1 }}>
-                                                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1976d2', wordBreak: 'break-all' }}>
-                                                            {link.web2Url}
-                                                        </div>
-                                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginTop: '4px' }}>
-                                                            Platform: {link.platform} • Points to: {link.originalUrl}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', padding: '12px', background: 'var(--primary-light)', borderRadius: '8px' }}>
-                                            <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>
-                                                Selected: {selectedWeb2Links.length} / {web2Links.length} links
-                                            </span>
-                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-light)' }}>
-                                                These authority links will be indexed along with your URLs
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
 
                                 <div style={{ marginBottom: '32px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1392,35 +1326,6 @@ export default function IndexingPanel() {
                                     </div>
                                 </div>
 
-                                <div style={{ padding: '24px', background: 'var(--bg-light)', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Settings size={18} />
-                                            <span style={{ fontWeight: 800 }}>Signal Intensity</span>
-                                        </div>
-                                        <p className="text-xs text-muted mt-1">Increasing intensity sends multiple pings to discovery nodes.</p>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        {['standard', 'aggressive', 'extreme'].map(lv => (
-                                            <button
-                                                key={lv}
-                                                onClick={() => setSignalIntensity(lv)}
-                                                style={{
-                                                    padding: '8px 16px',
-                                                    borderRadius: '10px',
-                                                    fontSize: '0.75rem',
-                                                    fontWeight: 800,
-                                                    background: signalIntensity === lv ? 'var(--primary)' : 'white',
-                                                    color: signalIntensity === lv ? 'white' : 'var(--text-dark)',
-                                                    border: '1px solid var(--border-color)'
-                                                }}
-                                            >
-                                                {lv[0].toUpperCase() + lv.slice(1)}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
                                 <button
                                     className="btn btn-primary btn-block btn-lg mt-8"
                                     onClick={handleSubmit}
@@ -1428,26 +1333,10 @@ export default function IndexingPanel() {
                                     style={{ height: '64px', borderRadius: '16px', fontSize: '1.1rem' }}
                                 >
                                     {isSubmitting
-                                        ? <><Loader2 size={24} className="animate-spin" style={{ marginRight: '12px' }} /> Signaling {selectedBots.length} Engines...</>
-                                        : <>Dispatch to {selectedBots.length} Engines <Send size={24} style={{ marginLeft: '12px' }} /></>}
+                                        ? <><Loader2 size={24} className="animate-spin" style={{ marginRight: '12px' }} /> Submitting to {selectedBots.length} Engine(s)...</>
+                                        : <>Submit to {selectedBots.length} Engine(s) <Send size={24} style={{ marginLeft: '12px' }} /></>}
                                 </button>
                             </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            {/* Tracker Modal */}
-            <AnimatePresence>
-                {showCodeModal && (
-                    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 110, display: 'flex', alignItems: 'center', justify: 'center', padding: '20px' }}>
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="panel-card" style={{ width: '100%', maxWidth: '600px', padding: '32px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                <h3 style={{ margin: 0 }}>Install Bot Tracker</h3>
-                                <button onClick={() => setShowCodeModal(false)}><X size={24} /></button>
-                            </div>
-                            <pre style={{ background: '#121212', color: '#00e676', padding: '24px', borderRadius: '12px', overflow: 'auto' }}>{trackingScript}</pre>
-                            <button className="btn btn-primary btn-block mt-4" onClick={copyCode}>{copied ? 'Copied!' : 'Copy Snippet'}</button>
                         </motion.div>
                     </div>
                 )}

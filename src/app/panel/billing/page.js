@@ -20,7 +20,7 @@ const plans = [
         regular: "$20",
         badge: "Growth",
         color: "var(--primary)",
-        features: ["10,000 Premium Discoveries", "Instant Bot Signaling", "Standard API Access", "Email Support", "Live Crawl Logs"]
+        features: ["10,000 URL Submissions", "Per-URL Status Tracking", "Standard API Access", "Email Support", "Submission History"]
     },
     {
         name: "100,000 URLs",
@@ -30,7 +30,7 @@ const plans = [
         badge: "Recommended",
         recommended: true,
         color: "var(--accent)",
-        features: ["100,000 High-Volume URLs", "Priority Node Routing", "Full API Integration", "Dedicated Support", "Discovery Analytics"]
+        features: ["100,000 URL Submissions", "Priority Processing Queue", "Full API Integration", "Dedicated Support", "Submission Analytics"]
     },
     {
         name: "1,000,000 URLs",
@@ -39,7 +39,7 @@ const plans = [
         regular: "$60",
         badge: "Scale",
         color: "var(--text-dark)",
-        features: ["Enterprise Submission Pool", "Custom Signaling Nodes", "Direct API Consultation", "24/7 Priority Desk", "White-label Reports"]
+        features: ["1,000,000 URL Submissions", "Custom Processing Limits", "Direct API Consultation", "24/7 Priority Desk", "White-label Reports"]
     },
 ];
 

@@ -31,7 +31,7 @@ export default function PrivacyPolicyPage() {
                     <Globe size={24} color="var(--primary)" />
                     <h2 style={{ margin: 0 }}>Third-Party Egress</h2>
                 </div>
-                <p>Our discovery signals are delivered to external search engine nodes (Google, Bing, OpenAI). Once a bot is signaled, the interaction between the crawler and your target URL is governed by your own site's privacy configuration and robots.txt rules.</p>
+                <p>When you submit a URL, Crawl Pilot sends requests to the official submission interfaces of the engines you selected (for example Google and Bing) and performs a standard HTTP request to verify the URL is reachable. Those requests are governed by your own site's privacy configuration and robots.txt rules.</p>
 
                 <div className="card bg-alt" style={{ marginTop: '40px', padding: '32px' }}>
                     <h4 className="mb-2">Your Data Rights</h4>

@@ -14,15 +14,15 @@ import FAQAccordion from '@/components/FAQAccordion';
 import CTABanner from '@/components/CTABanner';
 
 const generalFaqs = [
-    { question: "What is Crawl Pilot?", answer: "Crawl Pilot is an advanced bot signaling platform designed to accelerate search engine discovery. We route GoogleBot and BingBot directly to your content through our high-authority delivery network." },
-    { question: "How does Crawl Pilot work?", answer: "We create high-priority discovery signals across the global bot edge network. When you submit a URL, we notify search engine crawlers in real-time, effectively moving your content to the front of the crawl queue." },
-    { question: "Is it safe for my SEO?", answer: "Absolutely. Crawl Pilot uses 100% white-hat, compliant methods. We don't use 'black-hat' indexing tricks; we simply ensure your site is discovered by the official bots faster." },
+    { question: "What is Crawl Pilot?", answer: "Crawl Pilot is a URL submission and tracking platform. You submit URLs, we send them through the official submission interfaces engines actually provide (IndexNow for Bing and partners, the Google Indexing API for eligible content, and sitemap submission), and we record every engine response per URL." },
+    { question: "How does Crawl Pilot work?", answer: "When you submit URLs, each one is queued, sent through the supported engine interfaces, and given a real status — submitted, partial, failed or queued — based on the actual HTTP/API responses. Nothing is simulated; if an engine rejects a URL, you see why." },
+    { question: "Is it safe for my SEO?", answer: "Yes. We only use documented, white-hat submission interfaces and standard HTTP requests. We do not send fake crawler traffic, and we never claim guaranteed indexing — the search engine always decides what to index." },
 ];
 
 const technicalFaqs = [
-    { question: "How fast is discovery?", answer: "Typically, discovery happens within minutes. Indexing (the process of appearing in search) depends on your content quality and usually takes a few hours to a couple of days." },
-    { question: "Can I use the API?", answer: "Yes, Crawl Pilot is built with an API-first architecture. You can integrate our discovery signaling into your CMS or automation workflows with ease." },
-    { question: "Do you support all search engines?", answer: "We focus on the 'Big Three': Google, Bing, and GPTBot (OpenAI). Our signaling network ensures broad coverage across the modern search and AI ecosystem." },
+    { question: "How fast is discovery?", answer: "Submission requests are sent within seconds. How quickly an engine crawls and indexes afterwards depends on the engine, your content and your site's health — no third party can guarantee that timing." },
+    { question: "Can I use the API?", answer: "Yes. Every account gets an API token and can submit URLs programmatically through /api/v1 (single, bulk up to 1,000 URLs, balance and per-URL status)." },
+    { question: "Which engines do you support?", answer: "Google and Bing — the engines that expose submission interfaces (Bing's IndexNow also feeds participating engines such as Yandex). Engines without a public submission API are not offered, because we do not claim signals we cannot send." },
 ];
 
 export default function FAQPage() {
