@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { signOut } from 'next-auth/react';
 import styles from '@/components/operations.module.css';
 
 const STATUS_LABELS = {
@@ -15,11 +16,13 @@ const STATUS_LABELS = {
 async function readResponse(response) {
     const data = await response.json().catch(() => null);
     if (!response.ok || data?.error || data?.success === false) {
-        throw new Error(
+        const error = new Error(
             typeof data?.error === 'string'
                 ? data.error
                 : `Request failed (${response.status}). Please try again.`
         );
+        error.status = response.status;
+        throw error;
     }
     if (data === null && response.status !== 204) {
         throw new Error('Unable to read the server response. Refresh to check the current status.');
@@ -31,6 +34,7 @@ function useAdminQueue(endpoint, collectionKey) {
     const [items, setItems] = useState(null);
     const [loading, setLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
+    const [unauthorized, setUnauthorized] = useState(false);
     const [pending, setPending] = useState(null);
     const [actionError, setActionError] = useState('');
     const [success, setSuccess] = useState('');
@@ -44,6 +48,7 @@ function useAdminQueue(endpoint, collectionKey) {
         controller.current = request;
         setLoading(true);
         setLoadError('');
+        setUnauthorized(false);
         try {
             const response = await fetch(endpoint, { cache: 'no-store', signal: request.signal });
             const data = await readResponse(response);
@@ -55,7 +60,12 @@ function useAdminQueue(endpoint, collectionKey) {
             return true;
         } catch (error) {
             if (!request.signal.aborted && mounted.current) {
-                setLoadError(error.message || 'Unable to load this section. Please retry.');
+                if (error.status === 401) {
+                    setUnauthorized(true);
+                    setLoadError('Your admin session has expired or is not authorized.');
+                } else {
+                    setLoadError(error.message || 'Unable to load this section. Please retry.');
+                }
             }
             return false;
         } finally {
@@ -104,7 +114,7 @@ function useAdminQueue(endpoint, collectionKey) {
     };
 
     return {
-        items, loading, loadError, pending, actionError, success, refresh, mutate,
+        items, loading, loadError, unauthorized, pending, actionError, success, refresh, mutate,
         disabled: loading || Boolean(loadError) || Boolean(pending),
     };
 }
@@ -155,12 +165,25 @@ function QueueSection({ id, title, description, statuses, queue, children }) {
             {queue.loadError && (
                 <div className={`${styles.error} ${styles.stack}`} role="alert">
                     <p>Could not load {title.toLowerCase()}: {queue.loadError}</p>
-                    <p>{queue.items !== null ? 'Previously loaded records are shown. ' : ''}Actions are unavailable until this section reloads successfully.</p>
-                    <div className={styles.actions}>
-                        <button type="button" className="admin-btn" onClick={queue.refresh} disabled={queue.loading || Boolean(queue.pending)}>
-                            Retry {title.toLowerCase()}
-                        </button>
-                    </div>
+                    {queue.unauthorized ? (
+                        <>
+                            <p>Sign in again to continue. Retrying will not restore an expired session.</p>
+                            <div className={styles.actions}>
+                                <button type="button" className="admin-btn" onClick={() => signOut({ callbackUrl: '/authorize' })}>
+                                    Sign in again
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <p>{queue.items !== null ? 'Previously loaded records are shown. ' : ''}Actions are unavailable until this section reloads successfully.</p>
+                            <div className={styles.actions}>
+                                <button type="button" className="admin-btn" onClick={queue.refresh} disabled={queue.loading || Boolean(queue.pending)}>
+                                    Retry {title.toLowerCase()}
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
             {queue.items !== null && (

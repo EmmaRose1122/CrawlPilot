@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { signOut } from 'next-auth/react';
 import styles from '@/components/operations.module.css';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -28,6 +29,7 @@ export default function AdminOverview() {
     const [activityData, setActivityData] = useState(null);
     const [activityError, setActivityError] = useState('');
     const [activityLoading, setActivityLoading] = useState(true);
+    const [sessionExpired, setSessionExpired] = useState(false);
 
     const refreshActivity = useCallback(async () => {
         setActivityLoading(true);
@@ -50,13 +52,16 @@ export default function AdminOverview() {
         const readAdminResponse = async (response) => {
             const data = await response.json().catch(() => null);
             if (!response.ok || data?.error) {
-                throw new Error(data?.error || `Request failed with status ${response.status}`);
+                const error = new Error(data?.error || `Request failed with status ${response.status}`);
+                error.status = response.status;
+                throw error;
             }
             return data;
         };
 
         setIsLoading(true);
         setDashboardError('');
+        setSessionExpired(false);
 
         const [statsResult, usersResult, blogsResult, tasksResult] = await Promise.allSettled([
             fetch('/api/admin/stats', { cache: 'no-store' }).then(readAdminResponse),
@@ -77,6 +82,9 @@ export default function AdminOverview() {
 
         if (errors.length) {
             setDashboardError(errors[0]);
+            setSessionExpired([statsResult, usersResult, blogsResult, tasksResult].some(
+                (result) => result.status === 'rejected' && result.reason?.status === 401
+            ));
         }
 
         setIsLoading(false);
@@ -123,10 +131,18 @@ export default function AdminOverview() {
 
             {dashboardError && (
                 <div className="admin-card" style={{ marginBottom: '24px', borderColor: '#fecaca', background: '#fef2f2', color: '#991b1b' }}>
-                    <p style={{ marginBottom: '12px' }}>Admin data could not load: {dashboardError}. Any values shown may be out of date.</p>
-                    <button type="button" className="admin-btn" onClick={loadDashboard} disabled={isLoading}>
-                        {isLoading ? 'Retrying...' : 'Retry dashboard data'}
-                    </button>
+                    <p style={{ marginBottom: '12px' }}>
+                        {sessionExpired ? 'Your admin session has expired or is not authorized.' : `Admin data could not load: ${dashboardError}.`} Any values shown may be out of date.
+                    </p>
+                    {sessionExpired ? (
+                        <button type="button" className="admin-btn" onClick={() => signOut({ callbackUrl: '/authorize' })}>
+                            Sign in again
+                        </button>
+                    ) : (
+                        <button type="button" className="admin-btn" onClick={loadDashboard} disabled={isLoading}>
+                            {isLoading ? 'Retrying...' : 'Retry dashboard data'}
+                        </button>
+                    )}
                 </div>
             )}
 
