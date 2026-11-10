@@ -45,6 +45,21 @@ export function mapGoogleError(error) {
     const status = error?.response?.status || error?.code || null;
     const rawMessage = error?.response?.data?.error?.message || error?.message || 'Unknown Google API error';
 
+    if (/has not been used in project|it is disabled|SERVICE_DISABLED/i.test(rawMessage)) {
+        const details = error?.response?.data?.error?.details || [];
+        const info = details.find((detail) => detail?.reason === 'SERVICE_DISABLED' || detail?.metadata?.service);
+        const service = info?.metadata?.service
+            || rawMessage.match(/([a-z0-9-]+\.googleapis\.com)/i)?.[1]
+            || 'searchconsole.googleapis.com';
+        const consumer = info?.metadata?.consumer || rawMessage.match(/project\s+(\d+)/i)?.[1];
+        const project = consumer ? String(consumer).split('/').pop() : null;
+        const enableUrl = `https://console.developers.google.com/apis/api/${service}/overview${project ? `?project=${project}` : ''}`;
+        return {
+            httpStatus: status,
+            message: `Google API ${service} is disabled${project ? ` in project ${project}` : ''}. Enable it here: ${enableUrl} — wait a few minutes for propagation, then retry. The service account also needs Owner access in Search Console for sitemap submission and URL inspection.`,
+        };
+    }
+
     if (status === 401 || /invalid_grant|invalid key|DECODER/i.test(rawMessage)) {
         return { httpStatus: status, message: `Google rejected the service account credentials (${rawMessage}).` };
     }
