@@ -1,0 +1,37 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  INSFORGE_PROJECT_ID: 6938b3fd-732e-481c-bb75-05f6ce8827e4
+  INSFORGE_ORG_ID: b3fe45a8-3d3b-4ed3-9f5a-52f14e37fb3a
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Deploy HEAD snapshot to InsForge
+        env:
+          INSFORGE_USER_API_KEY: ${{ secrets.INSFORGE_USER_API_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/deploy-src"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/deploy-src"
+          npx -y @insforge/cli@0.2.8 login --user-api-key "$INSFORGE_USER_API_KEY"
+          npx -y @insforge/cli@0.2.8 link --project-id "$INSFORGE_PROJECT_ID" --org-id "$INSFORGE_ORG_ID"
+          npx -y @insforge/cli@0.2.8 deployments deploy "$RUNNER_TEMP/deploy-src"
