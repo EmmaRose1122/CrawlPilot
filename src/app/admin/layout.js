@@ -15,7 +15,7 @@ import {
     ArrowLeft,
     Gift
 } from 'lucide-react';
-import { signOut } from "next-auth/react";
+import { signOutToLogin } from '@/lib/clientSignOut';
 import './admin.css';
 
 const adminNavItems = [
@@ -76,7 +76,7 @@ export default function AdminLayout({ children }) {
 
                 <div style={{ padding: '24px', borderTop: '1px solid var(--border-color)' }}>
                     <button
-                        onClick={() => signOut({ callbackUrl: '/authorize' })}
+                        onClick={signOutToLogin}
                         className="admin-nav-item"
                         style={{ width: '100%', textAlign: 'left', background: 'none' }}
                     >

@@ -3,7 +3,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { signOutToLogin } from '@/lib/clientSignOut';
 import { useEffect } from "react";
 import {
     LayoutDashboard,
@@ -132,7 +133,7 @@ export default function PanelLayout({ children }) {
 
                 <div className="panel-sidebar-footer">
                     <button
-                        onClick={() => signOut({ callbackUrl: '/authorize' })}
+                        onClick={signOutToLogin}
                         className="panel-nav-item"
                         style={{ width: '100%', textAlign: 'left', background: 'none' }}
                     >

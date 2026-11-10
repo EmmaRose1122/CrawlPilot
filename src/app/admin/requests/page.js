@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { signOut } from 'next-auth/react';
+import { signOutToLogin } from '@/lib/clientSignOut';
 import styles from '@/components/operations.module.css';
 
 const STATUS_LABELS = {
@@ -169,7 +169,7 @@ function QueueSection({ id, title, description, statuses, queue, children }) {
                         <>
                             <p>Sign in again to continue. Retrying will not restore an expired session.</p>
                             <div className={styles.actions}>
-                                <button type="button" className="admin-btn" onClick={() => signOut({ callbackUrl: '/authorize' })}>
+                                <button type="button" className="admin-btn" onClick={signOutToLogin}>
                                     Sign in again
                                 </button>
                             </div>

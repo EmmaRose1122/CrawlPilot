@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { signOut } from 'next-auth/react';
+import { signOutToLogin } from '@/lib/clientSignOut';
 import styles from '@/components/operations.module.css';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -135,7 +135,7 @@ export default function AdminOverview() {
                         {sessionExpired ? 'Your admin session has expired or is not authorized.' : `Admin data could not load: ${dashboardError}.`} Any values shown may be out of date.
                     </p>
                     {sessionExpired ? (
-                        <button type="button" className="admin-btn" onClick={() => signOut({ callbackUrl: '/authorize' })}>
+                        <button type="button" className="admin-btn" onClick={signOutToLogin}>
                             Sign in again
                         </button>
                     ) : (
