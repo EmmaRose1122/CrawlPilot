@@ -16,6 +16,7 @@ import {
 
 const botOptions = [
     { id: 'google', name: 'Google', color: '#4285F4' },
+    { id: 'google-sitemap', name: 'Google Sitemap', color: '#34A853' },
     { id: 'bing', name: 'Bing', color: '#00A4EF' },
     { id: 'yandex', name: 'Yandex', color: '#FC3F1D' },
     { id: 'seznam', name: 'Seznam', color: '#CC0000' },

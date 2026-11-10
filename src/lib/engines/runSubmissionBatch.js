@@ -25,6 +25,17 @@ export async function runSubmissionBatch({ userId, records, engines }) {
 
     const urls = records.map((record) => record.url);
 
+    const urlsByHost = new Map();
+    for (const url of urls) {
+        try {
+            const host = new URL(url).hostname.toLowerCase();
+            if (!urlsByHost.has(host)) urlsByHost.set(host, []);
+            urlsByHost.get(host).push(url);
+        } catch {
+            // URLs were validated before enqueueing; ignore unparsable leftovers.
+        }
+    }
+
     // Mark records as processing so the UI can distinguish queued work.
     await Promise.all(records.map((record) =>
         updateIndexingResultInInsforge(record.id, { status: "processing" })
@@ -95,17 +106,6 @@ export async function runSubmissionBatch({ userId, records, engines }) {
     const indexNowEngines = engines.filter((engineId) => INDEXNOW_ENGINES[engineId]);
 
     if (indexNowEngines.length > 0) {
-        const urlsByHost = new Map();
-        for (const url of urls) {
-            try {
-                const host = new URL(url).hostname.toLowerCase();
-                if (!urlsByHost.has(host)) urlsByHost.set(host, []);
-                urlsByHost.get(host).push(url);
-            } catch {
-                // URLs were validated before enqueueing; ignore unparsable leftovers.
-            }
-        }
-
         if (!user.indexNowKey) {
             for (const url of urls) {
                 for (const engineId of indexNowEngines) {
@@ -163,10 +163,51 @@ export async function runSubmissionBatch({ userId, records, engines }) {
         }
     }
 
+    // ---- Google Sitemap: submit the host's sitemap through Search Console ----
+    if (engines.includes('google-sitemap')) {
+        if (!user.googleIndexingConfig) {
+            for (const url of urls) {
+                setResult(url, 'google-sitemap', {
+                    engine: 'google-sitemap',
+                    method: 'search-console-sitemap',
+                    ok: false,
+                    httpStatus: null,
+                    responseTime: null,
+                    error: 'Google service account not configured — add it in My profile.',
+                });
+            }
+        } else {
+            const { submitSitemap, mapGoogleError } = await import('../googleSearchConsole');
+            for (const [host, hostUrls] of urlsByHost) {
+                const sitemapUrl = `https://${host}/sitemap.xml`;
+                let outcome;
+                try {
+                    const submission = await submitSitemap(user.googleIndexingConfig, { sitemapUrl });
+                    outcome = submission.ok
+                        ? { ok: true, httpStatus: null, error: null }
+                        : { ok: false, httpStatus: null, error: submission.error };
+                } catch (error) {
+                    const mapped = mapGoogleError(error);
+                    outcome = { ok: false, httpStatus: mapped.httpStatus, error: mapped.message };
+                }
+
+                for (const url of hostUrls) {
+                    setResult(url, 'google-sitemap', {
+                        engine: 'google-sitemap',
+                        method: 'search-console-sitemap',
+                        responseTime: null,
+                        ...outcome,
+                    });
+                }
+                console.log(`[Batch] Google sitemap ${host}: ${outcome.ok ? 'accepted' : outcome.error}`);
+            }
+        }
+    }
+
     // Legacy engine ids are no longer supported — record them honestly.
     for (const url of urls) {
         for (const engineId of engines) {
-            if (engineId === 'google' || INDEXNOW_ENGINES[engineId]) continue;
+            if (engineId === 'google' || engineId === 'google-sitemap' || INDEXNOW_ENGINES[engineId]) continue;
             setResult(url, engineId, {
                 engine: engineId,
                 method: 'unsupported',
