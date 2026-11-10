@@ -177,7 +177,7 @@ export async function runSubmissionBatch({ userId, records, engines }) {
                 });
             }
         } else {
-            const { submitSitemap, mapGoogleError } = await import('../googleSearchConsole');
+            const { submitSitemap, mapGoogleError } = await import('./googleSearchConsole');
             for (const [host, hostUrls] of urlsByHost) {
                 const sitemapUrl = `https://${host}/sitemap.xml`;
                 let outcome;
