@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getSession, signIn } from 'next-auth/react';
+import { Eye, EyeOff } from 'lucide-react';
 import './authorize.css';
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,6 +20,7 @@ async function getFreshSession() {
 export default function AuthorizePage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
@@ -86,15 +88,42 @@ export default function AuthorizePage() {
                         </div>
                         <div style={{ marginBottom: '24px' }}>
                             <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '8px', color: 'var(--text-light)' }}>Password</label>
-                            <input
-                                type="password"
-                                className="input auth-input"
-                                placeholder="********"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid var(--border-color)' }}
-                                required
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type={showPassword ? 'text' : 'password'}
+                                    className="input auth-input"
+                                    placeholder="********"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    autoComplete="current-password"
+                                    style={{ width: '100%', padding: '14px', paddingRight: '52px', borderRadius: '12px', border: '1px solid var(--border-color)' }}
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((visible) => !visible)}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    aria-pressed={showPassword}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '4px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: '8px',
+                                        minWidth: '44px',
+                                        minHeight: '44px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        color: 'var(--text-light)',
+                                    }}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </div>
                         <button type="submit" className="btn btn-primary auth-submit" disabled={isLoading} style={{ width: '100%', height: '54px', fontSize: '1rem', borderRadius: '12px', fontWeight: 700 }}>
                             {isLoading ? 'Authenticating...' : 'Sign In'}
