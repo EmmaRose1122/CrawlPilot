@@ -1,7 +1,7 @@
 import { prisma } from "../prisma";
 import { sendBotSignals } from "../botSignals";
 import { readUserByIdFromInsforge, updateIndexingResultInInsforge } from "../adminData";
-import { submitIndexNowHost, verifyIndexNowKey } from "./indexnow";
+import { INDEXNOW_ENGINES, submitIndexNowHost, verifyIndexNowKey } from "./indexnow";
 
 /**
  * Executes one submission batch: sends URLs through the real engine interfaces
@@ -91,8 +91,10 @@ export async function runSubmissionBatch({ userId, records, engines }) {
         console.log(`[Batch] HTTP check: ${summary}`);
     }
 
-    // ---- Bing: real IndexNow submission, grouped by host ----
-    if (engines.includes('bing')) {
+    // ---- IndexNow partners: real submissions per endpoint, grouped by host ----
+    const indexNowEngines = engines.filter((engineId) => INDEXNOW_ENGINES[engineId]);
+
+    if (indexNowEngines.length > 0) {
         const urlsByHost = new Map();
         for (const url of urls) {
             try {
@@ -106,14 +108,16 @@ export async function runSubmissionBatch({ userId, records, engines }) {
 
         if (!user.indexNowKey) {
             for (const url of urls) {
-                setResult(url, 'bing', {
-                    engine: 'bing',
-                    method: 'indexnow',
-                    ok: false,
-                    httpStatus: null,
-                    responseTime: null,
-                    error: 'IndexNow key not configured — generate one in API Integration and host the key file.',
-                });
+                for (const engineId of indexNowEngines) {
+                    setResult(url, engineId, {
+                        engine: engineId,
+                        method: 'indexnow',
+                        ok: false,
+                        httpStatus: null,
+                        responseTime: null,
+                        error: 'IndexNow key not configured — generate one in API Integration and host the key file.',
+                    });
+                }
             }
         } else {
             for (const [host, hostUrls] of urlsByHost) {
@@ -121,35 +125,40 @@ export async function runSubmissionBatch({ userId, records, engines }) {
 
                 if (!verification.ok) {
                     for (const url of hostUrls) {
-                        setResult(url, 'bing', {
-                            engine: 'bing',
-                            method: 'indexnow',
-                            ok: false,
-                            httpStatus: verification.httpStatus,
-                            responseTime: null,
-                            error: `${verification.reason} — host ${verification.keyLocation}`,
-                        });
+                        for (const engineId of indexNowEngines) {
+                            setResult(url, engineId, {
+                                engine: engineId,
+                                method: 'indexnow',
+                                ok: false,
+                                httpStatus: verification.httpStatus,
+                                responseTime: null,
+                                error: `${verification.reason} — host ${verification.keyLocation}`,
+                            });
+                        }
                     }
                     continue;
                 }
 
-                const submission = await submitIndexNowHost({
-                    host,
-                    key: user.indexNowKey,
-                    urls: hostUrls,
-                });
-
-                for (const url of hostUrls) {
-                    setResult(url, 'bing', {
-                        engine: 'bing',
-                        method: 'indexnow',
-                        ok: submission.ok,
-                        httpStatus: submission.httpStatus,
-                        responseTime: null,
-                        error: submission.ok ? null : `${submission.error} — ${submission.keyLocation}`,
+                for (const engineId of indexNowEngines) {
+                    const submission = await submitIndexNowHost({
+                        host,
+                        key: user.indexNowKey,
+                        urls: hostUrls,
+                        endpoint: INDEXNOW_ENGINES[engineId].endpoint,
                     });
+
+                    for (const url of hostUrls) {
+                        setResult(url, engineId, {
+                            engine: engineId,
+                            method: 'indexnow',
+                            ok: submission.ok,
+                            httpStatus: submission.httpStatus,
+                            responseTime: null,
+                            error: submission.ok ? null : `${submission.error} — ${submission.keyLocation}`,
+                        });
+                    }
+                    console.log(`[Batch] IndexNow ${engineId} ${host}: ${submission.ok ? 'accepted' : submission.error} (${hostUrls.length} URLs)`);
                 }
-                console.log(`[Batch] IndexNow ${host}: ${submission.ok ? 'accepted' : submission.error} (${hostUrls.length} URLs)`);
             }
         }
     }
@@ -157,7 +166,7 @@ export async function runSubmissionBatch({ userId, records, engines }) {
     // Legacy engine ids are no longer supported — record them honestly.
     for (const url of urls) {
         for (const engineId of engines) {
-            if (engineId === 'google' || engineId === 'bing') continue;
+            if (engineId === 'google' || INDEXNOW_ENGINES[engineId]) continue;
             setResult(url, engineId, {
                 engine: engineId,
                 method: 'unsupported',

@@ -16,7 +16,13 @@ import {
 
 const botOptions = [
     { id: 'google', name: 'Google', color: '#4285F4' },
-    { id: 'bing', name: 'Bing', color: '#00A4EF' }
+    { id: 'bing', name: 'Bing', color: '#00A4EF' },
+    { id: 'yandex', name: 'Yandex', color: '#FC3F1D' },
+    { id: 'seznam', name: 'Seznam', color: '#CC0000' },
+    { id: 'naver', name: 'Naver', color: '#03C75A' },
+    { id: 'yep', name: 'Yep', color: '#E0A800' },
+    { id: 'internetarchive', name: 'Internet Archive', color: '#4A4A4A' },
+    { id: 'amazonbot', name: 'Amazonbot', color: '#FF9900' }
 ];
 
 export default function ManageUsersPage() {

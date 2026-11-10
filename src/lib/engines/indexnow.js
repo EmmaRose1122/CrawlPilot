@@ -9,6 +9,17 @@ import { randomBytes } from 'node:crypto';
 export const INDEXNOW_ENDPOINT = 'https://api.indexnow.org/indexnow';
 export const INDEXNOW_MAX_URLS_PER_REQUEST = 10000;
 
+// Endpoints published at https://www.indexnow.org/searchengines.json
+export const INDEXNOW_ENGINES = {
+    bing: { name: 'Bing', endpoint: 'https://www.bing.com/indexnow' },
+    yandex: { name: 'Yandex', endpoint: 'https://www.yandex.com/indexnow' },
+    seznam: { name: 'Seznam', endpoint: 'https://search.seznam.cz/indexnow' },
+    naver: { name: 'Naver', endpoint: 'https://searchadvisor.naver.com/indexnow' },
+    yep: { name: 'Yep', endpoint: 'https://indexnow.yep.com/indexnow' },
+    internetarchive: { name: 'Internet Archive', endpoint: 'https://web-static.archive.org/indexnow' },
+    amazonbot: { name: 'Amazonbot', endpoint: 'https://indexnow.amazonbot.amazon/indexnow' },
+};
+
 export function generateIndexNowKey() {
     return randomBytes(16).toString('hex'); // 32 chars, hex — within the 8-128 rule
 }
@@ -69,8 +80,8 @@ export async function verifyIndexNowKey(host, key, { timeoutMs = 8000 } = {}) {
     }
 }
 
-async function postIndexNowRequest(payload) {
-    const response = await fetch(INDEXNOW_ENDPOINT, {
+async function postIndexNowRequest(payload, endpoint = INDEXNOW_ENDPOINT) {
+    const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify(payload),
@@ -90,7 +101,7 @@ async function postIndexNowRequest(payload) {
  * Submits all URLs of a single host through IndexNow.
  * Retries once on 429 / 5xx (the request may not have been processed).
  */
-export async function submitIndexNowHost({ host, key, urls, maxRetries = 1, retryDelayMs = 2000 }) {
+export async function submitIndexNowHost({ host, key, urls, endpoint = INDEXNOW_ENDPOINT, maxRetries = 1, retryDelayMs = 2000 }) {
     const keyLocation = `https://${host}/${key}.txt`;
     const urlList = urls.slice(0, INDEXNOW_MAX_URLS_PER_REQUEST);
     const payload = { host, key, keyLocation, urlList };
@@ -101,7 +112,7 @@ export async function submitIndexNowHost({ host, key, urls, maxRetries = 1, retr
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
-            const { httpStatus, ok, bodyText } = await postIndexNowRequest(payload);
+            const { httpStatus, ok, bodyText } = await postIndexNowRequest(payload, endpoint);
             lastStatus = httpStatus;
             lastBody = bodyText;
 

@@ -38,7 +38,13 @@ import { RealTimeManager } from '@/lib/realtime';
 
 const botOptions = [
     { id: 'google', name: 'Google', desc: 'Indexing API / HTTP check', color: '#4285F4' },
-    { id: 'bing', name: 'Bing', desc: 'IndexNow submission', color: '#00A4EF' }
+    { id: 'bing', name: 'Bing', desc: 'IndexNow submission', color: '#00A4EF' },
+    { id: 'yandex', name: 'Yandex', desc: 'IndexNow submission', color: '#FC3F1D' },
+    { id: 'seznam', name: 'Seznam', desc: 'IndexNow submission', color: '#CC0000' },
+    { id: 'naver', name: 'Naver', desc: 'IndexNow submission', color: '#03C75A' },
+    { id: 'yep', name: 'Yep', desc: 'IndexNow submission', color: '#E0A800' },
+    { id: 'internetarchive', name: 'Internet Archive', desc: 'IndexNow submission', color: '#4A4A4A' },
+    { id: 'amazonbot', name: 'Amazonbot', desc: 'IndexNow submission', color: '#FF9900' }
 ];
 
 export default function IndexingPanel() {
