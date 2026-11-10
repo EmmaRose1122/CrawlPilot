@@ -5,6 +5,12 @@ import { prisma } from "./lib/prisma";
 import { readUserByEmailFromInsforge } from "./lib/adminData";
 import bcrypt from "bcryptjs";
 
+// A stale AUTH_URL makes Auth.js emit redirects to a different deployment.
+// trustHost is enabled, so let each deployment derive its origin from the
+// request headers instead of trusting a copied environment value.
+delete process.env.AUTH_URL;
+delete process.env.NEXTAUTH_URL;
+
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 // Emergency recovery is only active when explicit env credentials are configured.
 // No fallback credentials — if the env is missing, recovery is simply disabled.
