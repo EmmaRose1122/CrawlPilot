@@ -25,7 +25,10 @@
   },
   "devDependencies": {
     "eslint": "^9",
-    "eslint-config-next": "16.4.6"
+    "eslint-config-next": "16.1.6"
+  },
+  "overrides": {
+    "eslint-plugin-react-hooks": "7.0.1"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
