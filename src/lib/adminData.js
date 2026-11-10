@@ -17,7 +17,8 @@ function getInsforgeClient() {
         insforgeClient = createAdminClient({
             baseUrl,
             apiKey,
-            timeout: 10000,
+            // Leave headroom for the Prisma fallback inside the function timeout.
+            timeout: 5000,
         });
     }
 

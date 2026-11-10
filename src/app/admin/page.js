@@ -46,7 +46,7 @@ export default function AdminOverview() {
 
     useEffect(() => { refreshActivity(); }, [refreshActivity]);
 
-    useEffect(() => {
+    const loadDashboard = useCallback(async () => {
         const readAdminResponse = async (response) => {
             const data = await response.json().catch(() => null);
             if (!response.ok || data?.error) {
@@ -55,36 +55,34 @@ export default function AdminOverview() {
             return data;
         };
 
-        const fetchDashboard = async () => {
-            setIsLoading(true);
-            setDashboardError('');
+        setIsLoading(true);
+        setDashboardError('');
 
-            const [statsResult, usersResult, blogsResult, tasksResult] = await Promise.allSettled([
-                fetch('/api/admin/stats').then(readAdminResponse),
-                fetch('/api/admin/users').then(readAdminResponse),
-                fetch('/api/admin/blogs').then(readAdminResponse),
-                fetch('/api/admin/tasks').then(readAdminResponse),
-            ]);
+        const [statsResult, usersResult, blogsResult, tasksResult] = await Promise.allSettled([
+            fetch('/api/admin/stats', { cache: 'no-store' }).then(readAdminResponse),
+            fetch('/api/admin/users', { cache: 'no-store' }).then(readAdminResponse),
+            fetch('/api/admin/blogs', { cache: 'no-store' }).then(readAdminResponse),
+            fetch('/api/admin/tasks', { cache: 'no-store' }).then(readAdminResponse),
+        ]);
 
-            if (statsResult.status === 'fulfilled') setStatsData(statsResult.value);
-            if (usersResult.status === 'fulfilled' && Array.isArray(usersResult.value)) setUsers(usersResult.value);
-            if (blogsResult.status === 'fulfilled' && Array.isArray(blogsResult.value)) setBlogs(blogsResult.value);
-            if (tasksResult.status === 'fulfilled' && Array.isArray(tasksResult.value)) setTasks(tasksResult.value);
+        if (statsResult.status === 'fulfilled') setStatsData(statsResult.value);
+        if (usersResult.status === 'fulfilled' && Array.isArray(usersResult.value)) setUsers(usersResult.value);
+        if (blogsResult.status === 'fulfilled' && Array.isArray(blogsResult.value)) setBlogs(blogsResult.value);
+        if (tasksResult.status === 'fulfilled' && Array.isArray(tasksResult.value)) setTasks(tasksResult.value);
 
-            const errors = [statsResult, usersResult, blogsResult, tasksResult]
-                .filter((result) => result.status === 'rejected')
-                .map((result) => result.reason?.message)
-                .filter(Boolean);
+        const errors = [statsResult, usersResult, blogsResult, tasksResult]
+            .filter((result) => result.status === 'rejected')
+            .map((result) => result.reason?.message)
+            .filter(Boolean);
 
-            if (errors.length) {
-                setDashboardError(errors[0]);
-            }
+        if (errors.length) {
+            setDashboardError(errors[0]);
+        }
 
-            setIsLoading(false);
-        };
-
-        fetchDashboard();
+        setIsLoading(false);
     }, []);
+
+    useEffect(() => { loadDashboard(); }, [loadDashboard]);
 
     const stats = [
         { label: 'Total Users', value: isLoading ? '…' : statsData.userCount.toString(), icon: <Users size={24} /> },
@@ -125,7 +123,10 @@ export default function AdminOverview() {
 
             {dashboardError && (
                 <div className="admin-card" style={{ marginBottom: '24px', borderColor: '#fecaca', background: '#fef2f2', color: '#991b1b' }}>
-                    Admin data could not load: {dashboardError}
+                    <p style={{ marginBottom: '12px' }}>Admin data could not load: {dashboardError}. Any values shown may be out of date.</p>
+                    <button type="button" className="admin-btn" onClick={loadDashboard} disabled={isLoading}>
+                        {isLoading ? 'Retrying...' : 'Retry dashboard data'}
+                    </button>
                 </div>
             )}
 
