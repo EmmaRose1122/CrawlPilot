@@ -3,8 +3,5 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "installCommand": "npm install",
-  "regions": ["cle1"],
-  "git": {
-    "deploymentEnabled": false
-  }
+  "regions": ["cle1"]
 }
