@@ -7,7 +7,7 @@ export const metadata = {
   openGraph: {
     title: "Googlebot Guide - Fast SEO Indexing",
     description: "Learn how Googlebot crawls, renders, and indexes your URLs. Discover strategies for maximizing crawl budget and improving Google search visibility.",
-    url: "https://crawl-pilot.vercel.app/understanding-bots/google",
+    url: "https://crawl-pilot-psi.vercel.app/understanding-bots/google",
     type: "website",
     siteName: "Crawl Pilot",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }]

@@ -18,14 +18,14 @@ export const metadata = {
   description: "Submit URLs through IndexNow, the Google Indexing API and sitemaps, then track per-engine acceptance status with real HTTP responses. Transparent submission tooling with no simulated logs.",
   keywords: ["url submission", "indexnow", "google indexing api", "sitemap submission", "indexing status", "SEO", "crawl monitoring", "backlink indexing service", "instant indexing", "SEO automation", "AEO", "GEO"],
   authors: [{ name: "Crawl Pilot", url: "https://crawlpilot.io" }],
-  metadataBase: new URL('https://crawl-pilot.vercel.app'),
+  metadataBase: new URL('https://crawl-pilot-psi.vercel.app'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://crawl-pilot.vercel.app",
+    url: "https://crawl-pilot-psi.vercel.app",
     siteName: "Crawl Pilot",
     title: "Crawl Pilot - URL Submission & Indexing Status Tracker",
     description: "Submit URLs through official engine interfaces and track real acceptance status per URL.",
@@ -104,8 +104,8 @@ export default function RootLayout({ children }) {
                 "@context": "https://schema.org",
                 "@type": "Organization",
                 "name": "Crawl Pilot",
-                "url": "https://crawl-pilot.vercel.app",
-                "logo": "https://crawl-pilot.vercel.app/logo.png",
+                "url": "https://crawl-pilot-psi.vercel.app",
+                "logo": "https://crawl-pilot-psi.vercel.app/logo.png",
                 "description": "Fast URL indexing service for Google, Bing, and ChatGPT",
                 "address": {
                   "@type": "PostalAddress",
@@ -120,10 +120,10 @@ export default function RootLayout({ children }) {
                 "@context": "https://schema.org",
                 "@type": "WebSite",
                 "name": "Crawl Pilot",
-                "url": "https://crawl-pilot.vercel.app",
+                "url": "https://crawl-pilot-psi.vercel.app",
                 "potentialAction": {
                   "@type": "SearchAction",
-                  "target": "https://crawl-pilot.vercel.app/blog?q={search_term_string}",
+                  "target": "https://crawl-pilot-psi.vercel.app/blog?q={search_term_string}",
                   "query-input": "required name=search_term_string"
                 }
               },
@@ -131,10 +131,10 @@ export default function RootLayout({ children }) {
                 "@context": "https://schema.org",
                 "@type": "ItemList",
                 "itemListElement": [
-                  { "@type": "SiteNavigationElement", "position": 1, "name": "Pricing", "url": "https://crawl-pilot.vercel.app/pricing" },
-                  { "@type": "SiteNavigationElement", "position": 2, "name": "API Docs", "url": "https://crawl-pilot.vercel.app/api-docs" },
-                  { "@type": "SiteNavigationElement", "position": 3, "name": "FAQ", "url": "https://crawl-pilot.vercel.app/faq" },
-                  { "@type": "SiteNavigationElement", "position": 4, "name": "Blog", "url": "https://crawl-pilot.vercel.app/blog" }
+                  { "@type": "SiteNavigationElement", "position": 1, "name": "Pricing", "url": "https://crawl-pilot-psi.vercel.app/pricing" },
+                  { "@type": "SiteNavigationElement", "position": 2, "name": "API Docs", "url": "https://crawl-pilot-psi.vercel.app/api-docs" },
+                  { "@type": "SiteNavigationElement", "position": 3, "name": "FAQ", "url": "https://crawl-pilot-psi.vercel.app/faq" },
+                  { "@type": "SiteNavigationElement", "position": 4, "name": "Blog", "url": "https://crawl-pilot-psi.vercel.app/blog" }
                 ]
               }
             ]),

@@ -7,7 +7,7 @@ export const metadata = {
   openGraph: {
     title: "Account Settings - Manage Your Profile",
     description: "Manage your Crawl Pilot account settings, update your profile details, and configure your notification preferences for indexing completion.",
-    url: "https://crawl-pilot.vercel.app/panel/profile",
+    url: "https://crawl-pilot-psi.vercel.app/panel/profile",
     type: "website",
     siteName: "Crawl Pilot",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }]

@@ -7,7 +7,7 @@ export const metadata = {
   openGraph: {
     title: "Crawl Pilot Referral Program - Earn Credits",
     description: "Join the Crawl Pilot referral program and earn free indexing credits. Invite friends to get their backlinks indexed faster and get rewarded.",
-    url: "https://crawl-pilot.vercel.app/referral",
+    url: "https://crawl-pilot-psi.vercel.app/referral",
     type: "website",
     siteName: "Crawl Pilot",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }]

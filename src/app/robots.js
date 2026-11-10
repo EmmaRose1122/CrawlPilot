@@ -1,5 +1,5 @@
 export default function robots() {
-    const baseUrl = (process.env.NEXTAUTH_URL || process.env.AUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://crawl-pilot.vercel.app').replace(/\/$/, '');
+    const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://crawl-pilot-psi.vercel.app').replace(/\/$/, '');
 
     return {
         rules: [

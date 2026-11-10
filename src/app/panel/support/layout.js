@@ -7,7 +7,7 @@ export const metadata = {
   openGraph: {
     title: "Get Support - Account Help and Guidance",
     description: "Access the Crawl Pilot support center from your dashboard. Open a ticket with our team for personalized assistance with indexing and account issues.",
-    url: "https://crawl-pilot.vercel.app/panel/support",
+    url: "https://crawl-pilot-psi.vercel.app/panel/support",
     type: "website",
     siteName: "Crawl Pilot",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }]
