@@ -38,6 +38,7 @@ import { RealTimeManager } from '@/lib/realtime';
 
 const botOptions = [
     { id: 'google', name: 'Google', desc: 'Indexing API / HTTP check', color: '#4285F4' },
+    { id: 'google-indexing', name: 'Google Indexing API', desc: 'Service account required', color: '#0F9D58' },
     { id: 'google-sitemap', name: 'Google Sitemap', desc: 'Search Console sitemap submit', color: '#34A853' },
     { id: 'bing', name: 'Bing', desc: 'IndexNow submission', color: '#00A4EF' },
     { id: 'yandex', name: 'Yandex', desc: 'IndexNow submission', color: '#FC3F1D' },

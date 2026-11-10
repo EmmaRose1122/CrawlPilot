@@ -50,41 +50,60 @@ export async function runSubmissionBatch({ userId, records, engines }) {
 
     let apiStatus = 'NONE';
 
-    // ---- Google: real Indexing API when configured, otherwise an honest HTTP reachability check ----
-    if (engines.includes('google') && user.googleIndexingConfig) {
+    // ---- Google: real Indexing API for both google engines when configured ----
+    const googleEngines = engines.filter((engineId) => engineId === 'google' || engineId === 'google-indexing');
+
+    if (googleEngines.length > 0 && user.googleIndexingConfig) {
         try {
             const { batchGoogleIndexing } = await import('../googleIndexing');
             const apiResults = await batchGoogleIndexing(urls, user.googleIndexingConfig);
             apiStatus = 'API_SUCCESS';
             const byUrl = new Map(apiResults.map((result) => [result.url, result]));
 
-            for (const url of urls) {
-                const result = byUrl.get(url);
-                setResult(url, 'google', {
-                    engine: 'google',
-                    method: 'google-indexing-api',
-                    ok: !!result?.success,
-                    httpStatus: result?.status ?? null,
-                    responseTime: null,
-                    error: result?.success ? null : (result?.error || 'Google Indexing API returned no result for this URL'),
-                });
+            for (const engineId of googleEngines) {
+                for (const url of urls) {
+                    const result = byUrl.get(url);
+                    setResult(url, engineId, {
+                        engine: engineId,
+                        method: 'google-indexing-api',
+                        ok: !!result?.success,
+                        httpStatus: result?.status ?? null,
+                        responseTime: null,
+                        error: result?.success ? null : (result?.error || 'Google Indexing API returned no result for this URL'),
+                    });
+                }
             }
             console.log(`[Batch] Google API: ${apiResults.filter((result) => result.success).length}/${urls.length} accepted`);
         } catch (apiErr) {
             apiStatus = 'API_FAILED';
             console.error('[Batch] Google API error:', apiErr.message);
-            for (const url of urls) {
-                setResult(url, 'google', {
-                    engine: 'google',
-                    method: 'google-indexing-api',
-                    ok: false,
-                    httpStatus: null,
-                    responseTime: null,
-                    error: `Google Indexing API error: ${apiErr.message}`,
-                });
+            for (const engineId of googleEngines) {
+                for (const url of urls) {
+                    setResult(url, engineId, {
+                        engine: engineId,
+                        method: 'google-indexing-api',
+                        ok: false,
+                        httpStatus: null,
+                        responseTime: null,
+                        error: `Google Indexing API error: ${apiErr.message}`,
+                    });
+                }
             }
         }
-    } else if (engines.includes('google')) {
+    } else if (engines.includes('google-indexing')) {
+        for (const url of urls) {
+            setResult(url, 'google-indexing', {
+                engine: 'google-indexing',
+                method: 'google-indexing-api',
+                ok: false,
+                httpStatus: null,
+                responseTime: null,
+                error: 'Google service account not configured — add it in My profile.',
+            });
+        }
+    }
+
+    if (googleEngines.length > 0 && !user.googleIndexingConfig && engines.includes('google')) {
         const { results: httpResults, summary } = await sendBotSignals(['google'], urls, {
             concurrency: 5,
             maxRetries: 2,
@@ -207,7 +226,7 @@ export async function runSubmissionBatch({ userId, records, engines }) {
     // Legacy engine ids are no longer supported — record them honestly.
     for (const url of urls) {
         for (const engineId of engines) {
-            if (engineId === 'google' || engineId === 'google-sitemap' || INDEXNOW_ENGINES[engineId]) continue;
+            if (engineId === 'google' || engineId === 'google-indexing' || engineId === 'google-sitemap' || INDEXNOW_ENGINES[engineId]) continue;
             setResult(url, engineId, {
                 engine: engineId,
                 method: 'unsupported',
