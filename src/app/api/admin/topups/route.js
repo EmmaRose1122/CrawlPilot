@@ -31,10 +31,10 @@ export async function POST(req) {
     }
 
     try {
-        const body = await req.json().catch(() => ({}));
+        const body = (await req.json().catch(() => null)) || {};
         const { id, action, adminNote } = body;
 
-        if (!id || !['approve', 'reject'].includes(action)) {
+        if (typeof id !== 'string' || !id.trim() || !['approve', 'reject'].includes(action)) {
             return NextResponse.json({ error: "id and action (approve|reject) are required" }, { status: 400 });
         }
 
@@ -43,7 +43,10 @@ export async function POST(req) {
             return NextResponse.json({ error: "Request not found" }, { status: 404 });
         }
 
-        const note = typeof adminNote === 'string' ? adminNote.slice(0, 1000) : null;
+        if (adminNote != null && (typeof adminNote !== 'string' || adminNote.length > 1000)) {
+            return NextResponse.json({ error: 'Admin note must be at most 1,000 characters' }, { status: 400 });
+        }
+        const note = typeof adminNote === 'string' ? adminNote.trim() : null;
 
         if (action === 'approve') {
             const result = await prisma.$transaction(async (tx) => {

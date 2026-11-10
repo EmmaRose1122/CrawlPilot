@@ -157,7 +157,7 @@ export default function ReferralPanelPage() {
                     ) : (
                         <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-light)', border: '1px dashed var(--border-color)', borderRadius: '12px', marginTop: '24px' }}>
                             <Users size={32} style={{ margin: '0 auto 12px', opacity: 0.5 }} />
-                            <p style={{ margin: 0, fontSize: '0.9rem' }}>You haven't referred anyone yet.</p>
+                            <p style={{ margin: 0, fontSize: '0.9rem' }}>You haven&apos;t referred anyone yet.</p>
                             <p style={{ margin: '4px 0 0', fontSize: '0.8rem' }}>Share your link to get started!</p>
                         </div>
                     )}

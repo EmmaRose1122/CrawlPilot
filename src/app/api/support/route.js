@@ -29,7 +29,7 @@ export async function POST(req) {
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
-        const body = await req.json().catch(() => ({}));
+        const body = (await req.json().catch(() => null)) || {};
         const message = typeof body.message === 'string' ? body.message.trim() : '';
         const category = CATEGORIES.includes(body.category) ? body.category : 'General';
 

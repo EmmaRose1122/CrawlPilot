@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import {
@@ -9,10 +9,9 @@ import {
     Users,
     FileText,
     Settings,
-    Bell,
+    Inbox,
     LogOut,
     Zap,
-    BarChart3,
     ArrowLeft,
     Gift
 } from 'lucide-react';
@@ -24,12 +23,14 @@ const adminNavItems = [
     { href: '/admin/users', label: 'Manage Users', icon: <Users size={20} /> },
     { href: '/admin/blogs', label: 'Manage Blogs', icon: <FileText size={20} /> },
     { href: '/admin/tasks', label: 'Manage Tasks', icon: <Gift size={20} /> },
+    { href: '/admin/requests', label: 'Requests', icon: <Inbox size={20} /> },
 ];
 
 export default function AdminLayout({ children }) {
     const pathname = usePathname();
     const router = useRouter();
     const { data: session, status } = useSession();
+    const reduceMotion = useReducedMotion();
 
     useEffect(() => {
         if (status === "unauthenticated" || (status === "authenticated" && session?.user?.role !== "ADMIN")) {
@@ -93,10 +94,6 @@ export default function AdminLayout({ children }) {
                 <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                     <div></div>
                     <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                        <button style={{ position: 'relative', background: 'white', border: '1px solid var(--border-color)', padding: '10px', borderRadius: '12px' }}>
-                            <Bell size={20} />
-                            <span style={{ position: 'absolute', top: -4, right: -4, width: '18px', height: '18px', background: 'var(--admin-primary)', color: 'white', fontSize: '0.6rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>3</span>
-                        </button>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{session.user.name}</div>
@@ -111,9 +108,9 @@ export default function AdminLayout({ children }) {
 
                 <motion.div
                     key={pathname}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={reduceMotion ? false : { opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: reduceMotion ? 0 : 0.3 }}
                 >
                     {children}
                 </motion.div>

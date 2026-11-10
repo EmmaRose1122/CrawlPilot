@@ -7,8 +7,6 @@ import {
     Lock,
     Shield,
     Save,
-    Settings,
-    Bell,
     HardDrive,
     Loader2,
     Code,
@@ -255,26 +253,6 @@ export default function ProfilePage() {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="panel-card"
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                        <Bell size={20} color="var(--primary)" />
-                        <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Notifications</h3>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', cursor: 'pointer' }}>
-                            <input type="checkbox" defaultChecked /> Email alerts on low URL balance
-                        </label>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', cursor: 'pointer' }}>
-                            <input type="checkbox" defaultChecked /> Monthly discovery performance reports
-                        </label>
-                    </div>
-                </motion.div>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                     className="panel-card"
                 >
@@ -282,11 +260,8 @@ export default function ProfilePage() {
                         <HardDrive size={20} color="var(--primary)" />
                         <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Data & Privacy</h3>
                     </div>
-                    <p className="text-xs text-muted mb-4">Export your crawl logs or delete your account history. This action is permanent and cannot be undone.</p>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <button className="btn btn-ghost btn-sm flex-1">Export Logs</button>
-                        <button className="btn btn-outline btn-sm flex-1" style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}>Terminate Account</button>
-                    </div>
+                    <p className="text-sm text-muted mb-4">Self-service data export and account deletion are not available. Open a support ticket to request help; submitting a ticket does not delete your account.</p>
+                    <a href="/panel/support" className="btn btn-outline">Contact support</a>
                 </motion.div>
             </div>
 
@@ -338,7 +313,7 @@ export default function ProfilePage() {
                                     </button>
                                 </div>
                                 <div style={{ marginTop: '10px', padding: '10px 14px', background: '#fff3e0', borderRadius: '8px', fontSize: '0.78rem', color: '#b45309', fontWeight: 600 }}>
-                                    ⚠️ <strong>Important:</strong> Copy this email and add it as <strong>"Owner"</strong> in{' '}
+                                    ⚠️ <strong>Important:</strong> Copy this email and add it as <strong>&quot;Owner&quot;</strong> in{' '}
                                     <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" style={{ color: '#d97706', textDecoration: 'underline' }}>
                                         Google Search Console → Settings → Users & Permissions
                                     </a>. Without this step, Google will ignore all indexing requests.

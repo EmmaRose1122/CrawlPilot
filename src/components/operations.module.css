@@ -1,0 +1,54 @@
+.scope {
+    min-width: 0;
+    color: var(--text-body);
+    --request-error: #991b1b;
+    --request-success: #166534;
+}
+
+.scope input, .scope select, .scope textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    font: inherit;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-white);
+    color: var(--text-dark);
+}
+
+.scope textarea { resize: vertical; }
+.scope button, .scope a[class*="btn"] { min-height: 44px; }
+.scope button:disabled { opacity: 0.6; cursor: not-allowed; }
+.scope :is(button, a, input, select, textarea):focus-visible {
+    outline: 3px solid var(--text-dark);
+    outline-offset: 3px;
+}
+
+.stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start; }
+.heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.field label { font-weight: 700; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.notice { padding: 16px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-light); line-height: 1.6; overflow-wrap: anywhere; }
+.error { padding: 12px 16px; border-radius: 10px; background: #fef2f2; color: var(--request-error); overflow-wrap: anywhere; }
+.success { padding: 12px 16px; border-radius: 10px; background: #f0fdf4; color: var(--request-success); overflow-wrap: anywhere; }
+.item { padding: 20px; border: 1px solid var(--border-color); border-radius: 12px; min-width: 0; overflow-wrap: anywhere; }
+.meta { color: var(--text-body); font-size: 0.875rem; overflow-wrap: anywhere; }
+.status { display: inline-flex; padding: 4px 10px; border: 1px solid var(--border-color); border-radius: 999px; background: var(--bg-light); color: var(--text-dark); font-size: 0.875rem; font-weight: 700; text-transform: capitalize; }
+.prewrap { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.reference { font-family: var(--font-mono), monospace; font-size: 0.8125rem; overflow-wrap: anywhere; }
+
+@media (max-width: 1000px) {
+    .columns { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 480px) {
+    .scope :is(input, select, textarea) { font-size: 16px; }
+    .item { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scope *, .scope *::before, .scope *::after { animation: none !important; transition: none !important; }
+}

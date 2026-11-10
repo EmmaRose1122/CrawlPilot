@@ -185,7 +185,7 @@ export default function ManageBlogsPage() {
                     ) : (
                         <div className="text-center" style={{ padding: '40px' }}>
                             <FileText size={40} color="var(--border-color)" className="mb-2" />
-                            <p className="text-muted">No articles found. Click "Add New Article" to get started.</p>
+                            <p className="text-muted">No articles found. Click &quot;Add New Article&quot; to get started.</p>
                         </div>
                     )}
                 </div>

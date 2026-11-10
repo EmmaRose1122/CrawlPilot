@@ -1,39 +1,21 @@
-export const metadata = { title: "Payment History | Dashboard" };
+import Link from 'next/link';
+import { TopupHistoryPanel } from '@/components/TopupHistory';
+import styles from '@/components/operations.module.css';
+
+export const metadata = { title: 'Top-up History | Dashboard' };
 
 export default function PaymentsPage() {
     return (
-        <>
-            <h1 className="panel-page-title">Payment History</h1>
-
-            <div className="panel-card">
-                <div className="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Type</th>
-                                <th>Product</th>
-                                <th>Reference</th>
-                                <th>Amount</th>
-                                <th>Invoice</th>
-                                <th>Datetime</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colSpan={6}>
-                                    <div className="empty-state" style={{ padding: '40px 20px' }}>
-                                        <div className="empty-state-icon" style={{ width: '48px', height: '48px' }}>
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2" /><path d="M1 10h22" /></svg>
-                                        </div>
-                                        <p className="empty-state-text">No payments yet</p>
-                                        <p className="text-sm text-muted mt-1">Your payment history will appear here</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+        <div className={`${styles.scope} ${styles.stack}`} style={{ minWidth: 0, overflowWrap: 'anywhere' }}>
+            <div className="panel-page-header">
+                <h1 className="panel-page-title">Top-up History</h1>
+                <p className="panel-page-subtitle">Track manual credit requests and admin review decisions.</p>
             </div>
-        </>
+            <div className={styles.actions}>
+                <Link href="/panel/billing" className="btn btn-primary" style={{ whiteSpace: 'normal', maxWidth: '100%' }}>Request credits in Billing</Link>
+            </div>
+            <p className={styles.notice}>No online payments are processed here. This is a history of manual credit requests, not payment receipts or invoices.</p>
+            <TopupHistoryPanel />
+        </div>
     );
 }

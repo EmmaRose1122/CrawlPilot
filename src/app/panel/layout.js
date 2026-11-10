@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSession, signOut } from "next-auth/react";
 import { useEffect } from "react";
 import {
@@ -20,7 +20,6 @@ import {
     Menu,
     X,
     Zap,
-    Bell,
     FileSearch
 } from 'lucide-react';
 import './panel.css';
@@ -31,7 +30,7 @@ const navItems = [
     { href: '/panel/audit', label: 'Site Audit', icon: <FileSearch size={20} /> },
     { href: '/panel/api', label: 'API Integration', icon: <Code size={20} /> },
     { href: '/panel/billing', label: 'Balance Top-Up', icon: <CreditCard size={20} /> },
-    { href: '/panel/payments', label: 'Payment history', icon: <History size={20} /> },
+    { href: '/panel/payments', label: 'Top-up history', icon: <History size={20} /> },
     { href: '/panel/profile', label: 'My profile', icon: <User size={20} /> },
     { href: '/panel/earn', label: 'Rewards Hub', icon: <Gift size={20} />, badge: 'BONUS' },
     { href: '/panel/referral', label: 'Referral program', icon: <Users size={20} /> },
@@ -43,6 +42,7 @@ export default function PanelLayout({ children }) {
     const router = useRouter();
     const { data: session, status } = useSession();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const reduceMotion = useReducedMotion();
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -93,7 +93,7 @@ export default function PanelLayout({ children }) {
                         <Zap className="logo-icon" size={24} fill="currentColor" />
                         Crawl <span>Pilot</span>
                     </Link>
-                    <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>
+                    <button type="button" className="sidebar-close-btn" aria-label="Close navigation" onClick={() => setSidebarOpen(false)}>
                         <X size={20} />
                     </button>
                 </div>
@@ -104,6 +104,8 @@ export default function PanelLayout({ children }) {
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={() => setSidebarOpen(false)}
+                            aria-current={pathname === item.href ? 'page' : undefined}
                             className={`panel-nav-item ${pathname === item.href ? 'active' : ''}`}
                         >
                             {item.icon}
@@ -117,6 +119,8 @@ export default function PanelLayout({ children }) {
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={() => setSidebarOpen(false)}
+                            aria-current={pathname === item.href ? 'page' : undefined}
                             className={`panel-nav-item ${pathname === item.href ? 'active' : ''}`}
                         >
                             {item.icon}
@@ -146,7 +150,7 @@ export default function PanelLayout({ children }) {
             <main className="panel-main">
                 <header className="panel-header">
                     <div className="header-left">
-                        <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(true)}>
+                        <button type="button" className="sidebar-toggle-btn" aria-label="Open navigation" aria-expanded={sidebarOpen} aria-controls="panel-navigation" onClick={() => setSidebarOpen(true)}>
                             <Menu size={24} />
                         </button>
                         <div className="breadcrumb">
@@ -162,7 +166,6 @@ export default function PanelLayout({ children }) {
                                 Admin Center
                             </Link>
                         )}
-                        <button className="header-icon-btn"><Bell size={20} /></button>
                         <div className="panel-user-profile">
                             <div className="user-avatar">{session.user.name?.split(' ').map(n => n[0]).join('') || 'U'}</div>
                             <div className="user-info">

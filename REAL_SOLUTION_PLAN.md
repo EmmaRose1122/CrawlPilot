@@ -1,7 +1,7 @@
 # CrawlPilot — Real Solution Plan
 
 > Created: 2026-11-08. Turning the simulated "indexing engine" into an honest, API-backed submission service.
-> **Phases 0–4 code complete** — Phase 3 adds the durable `SubmissionJob` queue, Phase 4 adds the real site audit + AI crawler readiness. Phase 1/2 need user-hosted key file / service-account Owner access. Phase 5 (commerce honesty) is planned.
+> **Phases 0–5 code complete** — Phase 3 adds the durable `SubmissionJob` queue, Phase 4 adds the real site audit + AI crawler readiness, Phase 5 adds manual-only top-ups, in-app support and a real-record admin activity feed. Phase 1/2 need user-hosted key file / service-account Owner access; online payments and email delivery remain unbuilt by design.
 
 **Sach pehle:** koi service Google indexing guarantee nahi kar sakti. Real product = URL submission + per-engine acceptance tracking + status monitoring.
 
@@ -91,12 +91,17 @@
 - [ ] **Bot visit analytics** — intentionally NOT built without real access-log/analytics integration (would be simulated data again). Phase 4+ candidate.
 - **Accept (live):** `example.com` audited (HTTP 200, title detected), blocked URL rejected (SSRF), AI readiness read from the real robots.txt — verified 2026-11-08.
 
-## Phase 5 — Commerce & operations (2–3 din)
+## Phase 5 — Commerce & operations ✅ MANUAL-ONLY, LIVE VERIFIED (2026-11-10)
 
-- [ ] Real Stripe checkout (InsForge payments) ya manual top-up clearly manual
-- [ ] Support form → real email integration ya honest disabled (abhi disabled hai)
-- [ ] Notifications → real email ya remove
-- [ ] Admin activity feed from submission events
+- [x] **Manual top-ups, explicitly manual** — `/panel/billing` requests credits (1–1,000,000, note ≤1,000 chars, max 5 pending) and `/panel/payments` lists the latest 20 with review notes. No card/checkout flow exists and every screen says submission alone does not change the balance.
+- [x] **Admin review** — `/admin/requests` + `POST /api/admin/topups`: approve credits the balance exactly once inside a conditional `pending → approved` transaction, reject changes nothing. Concurrent creates serialize on a per-user row lock (`FOR UPDATE`, 15s transaction timeout) so the pending cap cannot be exceeded.
+- [x] **Support, in-app only** — `POST /api/support` (4 fixed categories, 5–5,000 chars) and `/panel/support` history; `POST /api/admin/support` replies (2–5,000 chars) or closes. Replies replace the latest admin response — this is **not** an email integration or a conversation thread, and the UI says so.
+- [x] **Activity feed from real records** — `GET /api/admin/activity` merges the latest 20 top-ups, tickets, accounts and submissions plus pending/open counts and approved-credit sum. It is the current state of recent records, **not** an immutable audit log (stated in the UI).
+- [x] **Notifications honesty** — removed the fake low-balance email toggles and hardcoded admin bell badge; profile now points account help to the support ticket form.
+- [x] **Live verification** — `tests/phase5.integration.mjs` (opt-in `RUN_LIVE_PHASE5_TESTS=1`, loopback-only, disposable `phase5-test-*@example.invalid` accounts, exact-ID cleanup, `--keep-fixtures`/`--cleanup`) passes HTTP + Prisma checks for anonymous/role denial, strict input validation, ownership spoofing, exactly-once concurrent approval, reject-without-credit, 6-parallel pending cap, support state machine, user isolation, latest-20/50 bounds and activity projection. Browser golden paths (user request → admin approve/reply → user sees balance, status and notes) were driven through the real NextAuth login; fixtures were deleted afterwards.
+- [ ] **Not built (needs external wiring):** Stripe/online payments (InsForge payments), outbound email for support/notifications, and full support conversation threads.
+
+**Known limits:** approval is a manual credits ledger, not payment settlement or revenue; NextAuth role lives in the JWT, so role changes need re-login; the 375px responsive view was CSS-reviewed but not visually verified because the automation browser had no measurable viewport.
 
 ---
 

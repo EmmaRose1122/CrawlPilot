@@ -1,19 +1,19 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import styles from '@/components/operations.module.css';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
     Users,
     Zap,
     TrendingUp,
     FileText,
     Activity,
-    ArrowUpRight,
-    Search,
-    Shield,
     Gift
 } from 'lucide-react';
 
 export default function AdminOverview() {
+    const reduceMotion = useReducedMotion();
     const [statsData, setStatsData] = useState({
         userCount: 0,
         blogCount: 0,
@@ -25,6 +25,26 @@ export default function AdminOverview() {
     const [tasks, setTasks] = useState([]);
     const [dashboardError, setDashboardError] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [activityData, setActivityData] = useState(null);
+    const [activityError, setActivityError] = useState('');
+    const [activityLoading, setActivityLoading] = useState(true);
+
+    const refreshActivity = useCallback(async () => {
+        setActivityLoading(true);
+        setActivityError('');
+        try {
+            const response = await fetch('/api/admin/activity', { cache: 'no-store' });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Failed to load activity');
+            setActivityData(data);
+        } catch (error) {
+            setActivityError(error.message || 'Failed to load activity');
+        } finally {
+            setActivityLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { refreshActivity(); }, [refreshActivity]);
 
     useEffect(() => {
         const readAdminResponse = async (response) => {
@@ -67,10 +87,10 @@ export default function AdminOverview() {
     }, []);
 
     const stats = [
-        { label: 'Total Users', value: statsData.userCount.toString(), icon: <Users size={24} />, trend: '0%', isUp: true },
-        { label: 'Active Discoveries', value: statsData.discoveryCount.toString(), icon: <Zap size={24} />, trend: '0%', isUp: true },
-        { label: 'Total Revenue', value: `$${statsData.totalRevenue}`, icon: <TrendingUp size={24} />, trend: '0%', isUp: true },
-        { label: 'Blog Posts', value: statsData.blogCount.toString(), icon: <FileText size={24} />, trend: '0%', isUp: true },
+        { label: 'Total Users', value: isLoading ? '…' : statsData.userCount.toString(), icon: <Users size={24} /> },
+        { label: 'URL Submissions', value: isLoading ? '…' : statsData.discoveryCount.toString(), icon: <Zap size={24} /> },
+        { label: 'Approved Top-up Credits', value: activityError ? 'Unavailable' : activityData?.summary.approvedCredits.toLocaleString() ?? '…', icon: <TrendingUp size={24} /> },
+        { label: 'Blog Posts', value: isLoading ? '…' : statsData.blogCount.toString(), icon: <FileText size={24} /> },
     ];
     const recentUsers = users.slice(0, 5);
     const recentBlogs = blogs.slice(0, 5);
@@ -87,28 +107,14 @@ export default function AdminOverview() {
                 {stats.map((stat, i) => (
                     <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={reduceMotion ? false : { opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
+                        transition={{ delay: reduceMotion ? 0 : i * 0.1, duration: reduceMotion ? 0 : 0.3 }}
                         className="admin-card"
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                             <div style={{ width: '48px', height: '48px', background: 'var(--bg-light)', color: 'var(--admin-primary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 {stat.icon}
-                            </div>
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                color: '#10b981',
-                                background: '#dcfce7',
-                                padding: '4px 8px',
-                                borderRadius: '8px',
-                                fontSize: '0.75rem',
-                                fontWeight: 700,
-                                height: 'fit-content'
-                            }}>
-                                <ArrowUpRight size={14} /> {stat.trend}
                             </div>
                         </div>
                         <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{stat.value}</div>
@@ -123,7 +129,7 @@ export default function AdminOverview() {
                 </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '24px', marginBottom: '24px' }}>
+            <div className="admin-recent-grid">
                 <div className="admin-card">
                     <h3 style={{ marginBottom: '18px', fontSize: '1.1rem', display: 'flex', gap: '8px', alignItems: 'center' }}><Users size={18} /> Recent Users</h3>
                     {isLoading ? (
@@ -185,23 +191,33 @@ export default function AdminOverview() {
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-                <div className="admin-card">
-                    <h3 style={{ marginBottom: '24px', fontSize: '1.1rem' }}>Recent Platform Activity</h3>
-                    <div style={{ padding: '40px', textAlign: 'center' }}>
-                        <Activity size={40} color="var(--border-color)" className="mb-2" style={{ margin: '0 auto' }} />
-                        <p className="text-sm text-muted">Awaiting initial user logs and transactions...</p>
+            <div className={`${styles.scope} ${styles.columns}`}>
+                <section className={`admin-card ${styles.stack}`} aria-labelledby="activity-heading">
+                    <div className={styles.heading}>
+                        <h2 id="activity-heading"><Activity size={20} /> Recent Platform Activity</h2>
+                        <button type="button" className="admin-btn" disabled={activityLoading} onClick={refreshActivity}>
+                            {activityLoading ? 'Refreshing...' : 'Refresh activity'}
+                        </button>
                     </div>
-                </div>
-
-                <div className="admin-card">
-                    <h3 style={{ marginBottom: '24px', fontSize: '1.1rem' }}>Engine Acceptance</h3>
-                    <div style={{ padding: '20px', textAlign: 'center' }}>
-                        <Shield size={32} color="var(--border-color)" className="mb-2" style={{ margin: '0 auto' }} />
-                        <p className="text-xs text-muted">No submissions recorded yet.</p>
-                        <div style={{ width: '100%', height: '8px', background: 'var(--bg-light)', borderRadius: '4px', marginTop: '16px' }}></div>
-                    </div>
-                </div>
+                    <p className={styles.meta}>Latest stored state of the 20 most recently created or updated records, not a complete audit log.</p>
+                    {activityError && <p className={styles.error} role="alert">{activityError}. Use Refresh activity to retry.</p>}
+                    {activityLoading && <p role="status">Loading activity...</p>}
+                    {!activityLoading && !activityError && activityData?.activity.length === 0 && <p>No activity yet.</p>}
+                    {activityData?.activity.map(item => (
+                        <article key={item.id} className={styles.item}>
+                            <h3>{item.href ? <Link href={item.href}>{item.title}</Link> : item.title}</h3>
+                            <p className={styles.prewrap}>{item.detail}</p>
+                            <time className={styles.meta} dateTime={item.at}>{new Date(item.at).toLocaleString()}</time>
+                        </article>
+                    ))}
+                </section>
+                <section className={`admin-card ${styles.stack}`} aria-labelledby="review-heading">
+                    <h2 id="review-heading">Awaiting review</h2>
+                    <p>Pending top-ups: <strong>{activityError ? 'Unavailable' : activityData?.summary.pendingTopups ?? '…'}</strong></p>
+                    <p>Unanswered support tickets: <strong>{activityError ? 'Unavailable' : activityData?.summary.openTickets ?? '…'}</strong></p>
+                    <p className={styles.meta}>Approved credits are not payment revenue. No online payment processor is connected.</p>
+                    <Link href="/admin/requests" className="btn btn-outline">Manage requests</Link>
+                </section>
             </div>
         </div>
     );

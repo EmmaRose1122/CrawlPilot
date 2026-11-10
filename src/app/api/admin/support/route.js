@@ -31,22 +31,22 @@ export async function POST(req) {
     }
 
     try {
-        const body = await req.json().catch(() => ({}));
+        const body = (await req.json().catch(() => null)) || {};
         const { id, action, reply } = body;
 
-        if (!id || !['reply', 'close'].includes(action)) {
+        if (typeof id !== 'string' || !id.trim() || !['reply', 'close'].includes(action)) {
             return NextResponse.json({ error: "id and action (reply|close) are required" }, { status: 400 });
         }
 
         if (action === 'reply') {
             const text = typeof reply === 'string' ? reply.trim() : '';
-            if (text.length < 2) {
-                return NextResponse.json({ error: "Reply is required" }, { status: 400 });
+            if (text.length < 2 || text.length > 5000) {
+                return NextResponse.json({ error: "Reply must be between 2 and 5,000 characters" }, { status: 400 });
             }
 
             const updated = await prisma.supportTicket.updateMany({
                 where: { id, status: { in: ['open', 'answered'] } },
-                data: { status: 'answered', adminReply: text.slice(0, 5000), answeredAt: new Date() },
+                data: { status: 'answered', adminReply: text, answeredAt: new Date() },
             });
 
             if (updated.count === 0) {
