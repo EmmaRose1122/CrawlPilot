@@ -3,6 +3,8 @@ import { runSubmissionBatch } from "./engines/runSubmissionBatch";
 import { updateIndexingResultInInsforge } from "./adminData";
 
 const DEFAULT_LIMIT = 20;
+const DEFAULT_TIME_BUDGET_MS = 45000;
+const MAX_RECORDS_PER_JOB = 10;
 const STALE_LOCK_MINUTES = 10;
 const MAX_BACKOFF_MS = 30 * 60 * 1000;
 
@@ -110,11 +112,69 @@ async function failJobRecords(job, reason) {
 /**
  * Processes pending jobs. Safe to call concurrently: claims are atomic.
  */
-export async function processPendingJobs({ limit = DEFAULT_LIMIT } = {}) {
+/**
+ * Old submissions were enqueued as single large jobs. Split them so a worker
+ * invocation finishes before the platform timeout, without losing records.
+ */
+export async function splitOversizedJobs({ maxRecords = MAX_RECORDS_PER_JOB, maxJobs = 50 } = {}) {
+    const candidates = await prisma.submissionJob.findMany({
+        where: { status: 'pending' },
+        orderBy: { createdAt: 'asc' },
+        take: maxJobs,
+        select: { id: true, userId: true, payload: true },
+    });
+
+    let split = 0;
+    let created = 0;
+
+    for (const job of candidates) {
+        let payload;
+        try {
+            payload = JSON.parse(job.payload);
+        } catch {
+            continue;
+        }
+        const records = payload.records || [];
+        if (records.length <= maxRecords) continue;
+        const engines = payload.engines || [];
+
+        try {
+            await prisma.$transaction(async (tx) => {
+                // Claim the original so a concurrent worker cannot also split it.
+                const claimed = await tx.submissionJob.updateMany({
+                    where: { id: job.id, status: 'pending' },
+                    data: { status: 'processing', lockedAt: new Date() },
+                });
+                if (claimed.count === 0) return;
+
+                for (let index = 0; index < records.length; index += maxRecords) {
+                    await tx.submissionJob.create({
+                        data: {
+                            userId: job.userId,
+                            payload: JSON.stringify({ records: records.slice(index, index + maxRecords), engines }),
+                        },
+                    });
+                    created += 1;
+                }
+                await tx.submissionJob.delete({ where: { id: job.id } });
+            });
+            split += 1;
+        } catch (error) {
+            console.error('[Queue] Could not split job', job.id, error.message);
+        }
+    }
+
+    return { split, created };
+}
+
+export async function processPendingJobs({ limit = DEFAULT_LIMIT, timeBudgetMs = DEFAULT_TIME_BUDGET_MS } = {}) {
     let processed = 0;
     let failed = 0;
+    const deadline = Date.now() + timeBudgetMs;
 
     for (let i = 0; i < limit; i++) {
+        // Stop before the platform kills the invocation mid-job.
+        if (Date.now() >= deadline) break;
         let job;
         try {
             job = await claimNextJob();

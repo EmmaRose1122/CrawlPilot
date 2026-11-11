@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { processPendingJobs, requeueStaleJobs } from "@/lib/jobQueue";
+import { processPendingJobs, requeueStaleJobs, splitOversizedJobs } from "@/lib/jobQueue";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -25,12 +25,15 @@ async function handle(req) {
 
     try {
         const stale = await requeueStaleJobs();
-        const result = await processPendingJobs({ limit: 20 });
+        const split = await splitOversizedJobs();
+        const result = await processPendingJobs({ limit: 20, timeBudgetMs: 45000 });
 
         return NextResponse.json({
             ok: true,
             requeued: stale.requeued,
             deadLettered: stale.dead,
+            split: split.split,
+            splitJobs: split.created,
             ...result,
             timestamp: new Date().toISOString(),
         });
