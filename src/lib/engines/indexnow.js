@@ -11,6 +11,7 @@ export const INDEXNOW_MAX_URLS_PER_REQUEST = 10000;
 
 // Endpoints published at https://www.indexnow.org/searchengines.json
 export const INDEXNOW_ENGINES = {
+    indexnow: { name: 'IndexNow (all partners)', endpoint: 'https://api.indexnow.org/indexnow' },
     bing: { name: 'Bing', endpoint: 'https://www.bing.com/indexnow' },
     yandex: { name: 'Yandex', endpoint: 'https://www.yandex.com/indexnow' },
     seznam: { name: 'Seznam', endpoint: 'https://search.seznam.cz/indexnow' },
