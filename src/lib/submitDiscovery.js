@@ -11,6 +11,10 @@ import {
 
 export const INSUFFICIENT_CREDITS = "INSUFFICIENT_CREDITS";
 
+// Small jobs finish inside one serverless invocation, so a large batch cannot
+// monopolise the worker or time out in the middle of a host group.
+const URLS_PER_JOB = 10;
+
 function parseAllowedBots(user) {
     try {
         const parsed = JSON.parse(user.allowedBots || '["google"]');
@@ -147,13 +151,17 @@ export async function submitDiscovery({ userId, rawUrls, requestedBots }) {
                 throw new Error("INSUFFICIENT_CREDITS_RACE");
             }
 
-            // Durable job: the cron worker (or the immediate kick below) runs it,
-            // so a serverless timeout can no longer lose the submission.
-            await enqueueSubmissionJob(tx, {
-                userId,
-                records: records.map((record) => ({ id: record.id, url: record.url })),
-                engines: filteredBots,
-            });
+            // Durable jobs: the cron worker (or the immediate kick below) runs
+            // them, so a serverless timeout can no longer lose the submission.
+            for (let index = 0; index < records.length; index += URLS_PER_JOB) {
+                await enqueueSubmissionJob(tx, {
+                    userId,
+                    records: records
+                        .slice(index, index + URLS_PER_JOB)
+                        .map((record) => ({ id: record.id, url: record.url })),
+                    engines: filteredBots,
+                });
+            }
 
             return records;
         });

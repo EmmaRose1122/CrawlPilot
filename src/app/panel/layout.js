@@ -21,12 +21,14 @@ import {
     Menu,
     X,
     Zap,
-    FileSearch
+    FileSearch,
+    BarChart3
 } from 'lucide-react';
 import './panel.css';
 
 const navItems = [
     { href: '/panel/overview', label: 'Overview', icon: <LayoutDashboard size={20} /> },
+    { href: '/panel/reports', label: 'Daily report', icon: <BarChart3 size={20} /> },
     { href: '/panel/indexing', label: 'Indexing', icon: <Search size={20} /> },
     { href: '/panel/audit', label: 'Site Audit', icon: <FileSearch size={20} /> },
     { href: '/panel/api', label: 'API Integration', icon: <Code size={20} /> },
