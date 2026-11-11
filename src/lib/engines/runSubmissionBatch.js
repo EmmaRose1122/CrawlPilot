@@ -257,9 +257,10 @@ export async function runSubmissionBatch({ userId, records, engines }) {
         if (successCount > 0) {
             status = successCount === totalCount ? "submitted" : "partial";
         }
-        if (status === "failed") {
-            refundCredits += totalCount;
-        }
+
+        // Charge only for engines that accepted. Partial records get the failed
+        // engines refunded instead of charging for the whole batch.
+        refundCredits += totalCount - successCount;
 
         await updateIndexingResultInInsforge(record.id, {
             status,

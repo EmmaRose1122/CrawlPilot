@@ -42,6 +42,7 @@ export async function sendGoogleIndexingRequest(url, configJson, type = 'URL_UPD
         console.error('Google Indexing API Error:', error);
         return {
             success: false,
+            status: error?.response?.status || error?.code || null,
             error: error.message,
             url
         };
@@ -54,9 +55,23 @@ export async function sendGoogleIndexingRequest(url, configJson, type = 'URL_UPD
  */
 export async function batchGoogleIndexing(urls, configJson, type = 'URL_UPDATED') {
     const results = [];
-    for (const url of urls) {
-        const result = await sendGoogleIndexingRequest(url, configJson, type);
+    for (let index = 0; index < urls.length; index += 1) {
+        const result = await sendGoogleIndexingRequest(urls[index], configJson, type);
         results.push(result);
+
+        // Quota is shared by the whole Google Cloud project; stop calling and
+        // mark the rest with the same reason instead of burning requests.
+        if (!result.success && (result.status === 429 || /quota exceeded/i.test(result.error || ''))) {
+            for (const url of urls.slice(index + 1)) {
+                results.push({
+                    success: false,
+                    status: 429,
+                    error: result.error,
+                    url,
+                });
+            }
+            break;
+        }
     }
     return results;
 }
