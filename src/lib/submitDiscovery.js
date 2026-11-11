@@ -14,6 +14,7 @@ export const INSUFFICIENT_CREDITS = "INSUFFICIENT_CREDITS";
 // Small jobs finish inside one serverless invocation, so a large batch cannot
 // monopolise the worker or time out in the middle of a host group.
 const URLS_PER_JOB = 10;
+const ASSET_URL_PATTERN = /\.(?:jpe?g|png|gif|webp|avif|svg|ico|bmp|css|js|mjs|woff2?|ttf|eot|mp4|webm|mp3|wav|zip)$/i;
 
 function parseAllowedBots(user) {
     try {
@@ -45,16 +46,28 @@ export async function submitDiscovery({ userId, rawUrls, requestedBots }) {
     }
 
     const validation = await Promise.all(normalizedUrls.map((url) => validatePublicHttpUrl(url)));
-    const safeUrls = validation.filter((v) => v.ok).map((v) => v.url);
+    const validUrls = validation.filter((v) => v.ok).map((v) => v.url);
     const skippedUrls = validation
         .filter((v) => !v.ok)
         .map((v) => ({ url: v.value, reason: v.reason }));
+
+    // Search engines index HTML documents; submitting images/scripts/CSS only
+    // burns credits and daily API quota.
+    const safeUrls = [];
+    for (const url of validUrls) {
+        const pathname = new URL(url).pathname;
+        if (ASSET_URL_PATTERN.test(pathname)) {
+            skippedUrls.push({ url, reason: 'Static asset URLs are not submitted for indexing' });
+        } else {
+            safeUrls.push(url);
+        }
+    }
 
     if (safeUrls.length === 0) {
         return {
             status: 400,
             payload: {
-                error: "Invalid URLs. None of the submitted URLs are publicly reachable.",
+                error: "No indexable HTML pages found. Static assets such as images, CSS and scripts are skipped.",
                 skippedUrls,
             },
         };
